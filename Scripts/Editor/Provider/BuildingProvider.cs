@@ -45,7 +45,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
         {
             if (_settings == null || _appNameProperty == null || _typeItemsProperty == null)
                 return;
-            
+
             _settings.Update();
 
             EditorGUILayout.BeginHorizontal();
@@ -55,10 +55,11 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
             {
                 _appNameProperty.stringValue = Application.productName;
             }
+
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space(15f);
             EditorGUILayout.PropertyField(_typeItemsProperty, new GUIContent("Building Types"));
-            
+
             EditorGUILayout.Space(15f);
             EditorGUILayout.PropertyField(_groupItemsProperty, new GUIContent("Building Groups"));
 
@@ -70,6 +71,10 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
 
             EditorGUILayout.LabelField("Scenes:");
             EditorGUILayout.LabelField(string.Join(Environment.NewLine, EditorBuildSettings.scenes.Select(x => x.path).ToArray()), EditorStyles.wordWrappedLabel);
+
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Asset Bundles:");
+            EditorGUILayout.LabelField(string.Join(Environment.NewLine, AssetBundleSettings.Singleton.Items.Select(x => x.AssetBundleName + " [" + (x.BuildAssetBundle ? "X" : "O") + "] (Binary Path: " + x.BuildSubPath + ")")), EditorStyles.wordWrappedLabel);
             EditorGUI.EndDisabledGroup();
         }
 

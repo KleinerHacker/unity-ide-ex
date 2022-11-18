@@ -3,34 +3,16 @@ using UnityEditor;
 using UnityEditor.Build;
 using UnityEngine;
 using UnityEngine.Serialization;
+using UnityExtension.Runtime.extension.Scripts.Runtime.Assets;
 using UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils;
 
 namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
 {
-    internal sealed class BuildingSettings : ScriptableObject
+    internal sealed class BuildingSettings : ProviderAsset<BuildingSettings>
     {
-        private const string Path = "Assets/building.asset";
+        public static BuildingSettings Singleton => GetSingleton("building", "building.asset", "Editor/Resources", BuildingSettingsFactory.Create);
 
-        public static BuildingSettings Singleton
-        {
-            get
-            {
-                var settings = AssetDatabase.LoadAssetAtPath<BuildingSettings>(Path);
-                if (settings == null)
-                {
-                    Debug.Log("Unable to find game settings, create new");
-
-                    settings = BuildingSettingsFactory.Create();
-                    AssetDatabase.CreateAsset(settings, Path);
-                    AssetDatabase.SaveAssets();
-                    AssetDatabase.Refresh();
-                }
-
-                return settings;
-            }
-        }
-
-        public static SerializedObject SerializedSingleton => new SerializedObject(Singleton);
+        public static SerializedObject SerializedSingleton => GetSerializedSingleton("building", "building.asset", "Editor/Resources", BuildingSettingsFactory.Create);
 
         #region Inspector Data
 
@@ -45,6 +27,9 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
 
         [SerializeField]
         private bool runTests = true;
+
+        [SerializeField]
+        private bool buildAssetBundles = true;
 
         [FormerlySerializedAs("targetName")]
         [SerializeField]
@@ -93,6 +78,12 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
         {
             get => runTests;
             internal set => runTests = value;
+        }
+
+        public bool BuildAssetBundles
+        {
+            get => buildAssetBundles;
+            internal set => buildAssetBundles = value;
         }
 
         #endregion
