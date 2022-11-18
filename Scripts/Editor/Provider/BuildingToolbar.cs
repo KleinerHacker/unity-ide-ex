@@ -17,20 +17,28 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
         private static readonly GenericMenu BuildMenu = new GenericMenu();
 
         private static readonly BuildingSettings BuildingSettings;
-        private static readonly SerializedObject SerializedObject;
+        private static readonly SerializedObject BuildingSerializedObject;
+        
+        private static readonly AssetBundleSettings AssetBundleSettings;
+        private static readonly SerializedObject AssetBundleSerializedObject;
 
         private static bool _blockRecompile;
 
         static BuildingToolbar()
         {
             BuildingSettings = BuildingSettings.Singleton;
-            SerializedObject = BuildingSettings.SerializedSingleton;
+            BuildingSerializedObject = BuildingSettings.SerializedSingleton;
+            
+            AssetBundleSettings = AssetBundleSettings.Singleton;
+            AssetBundleSerializedObject = AssetBundleSettings.SerializedSingleton;
             
             ToolbarExtender.LeftToolbarGUI.Add(OnLeftToolbarGUI);
             ToolbarExtender.RightToolbarGUI.Insert(0, OnRightToolbarGUI);
 
             BuildMenu.AddItem(new GUIContent("Build"), false, () => Build(UnityBuilding.BuildBehavior.BuildOnly));
             BuildMenu.AddItem(new GUIContent("Build and Run"), false, () => Build(UnityBuilding.BuildBehavior.BuildAndRun));
+            BuildMenu.AddSeparator(null);
+            BuildMenu.AddItem(new GUIContent("Build Asset Bundles Only"), false, () => Build(UnityBuilding.BuildBehavior.BuildAssetBundleOnly));
             BuildMenu.AddSeparator(null);
             BuildMenu.AddItem(new GUIContent("Run Tests"), false, RunTests);
 
@@ -40,11 +48,11 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
 
         private static void OnLeftToolbarGUI()
         {
-            SerializedObject.Update();
+            BuildingSerializedObject.Update();
 
             GUILayout.FlexibleSpace();
 
-            GUILayout.Space(30f);
+            GUILayout.Space(5f);
 
             GUILayout.Label("Build: ", ToolbarStyles.labelStyle);
             BuildingSettings.BuildingData.BuildTarget = (BuildTarget)EditorGUILayout.EnumPopup(null, BuildingSettings.BuildingData.BuildTarget,
@@ -67,8 +75,9 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
 
             BuildingSettings.Clean = GUILayout.Toggle(BuildingSettings.Clean, new GUIContent(EditorGUIUtility.IconContent("Grid.EraserTool").image, "Clean complete build cache"), ToolbarStyles.commandButtonStyle);
             BuildingSettings.ShowFolder = GUILayout.Toggle(BuildingSettings.ShowFolder, new GUIContent(EditorGUIUtility.IconContent("d_FolderOpened Icon").image, "Open the build folder"), ToolbarStyles.commandButtonStyle);
+            BuildingSettings.BuildAssetBundles = GUILayout.Toggle(BuildingSettings.BuildAssetBundles, new GUIContent(EditorGUIUtility.IconContent("d_Profiler.NetworkOperations").image, "Build Asset Bundles"), ToolbarStyles.commandButtonStyle);
             BuildingSettings.RunTests = GUILayout.Toggle(BuildingSettings.RunTests, new GUIContent(EditorGUIUtility.IconContent("FilterSelectedOnly").image, "Run tests before build starts"), ToolbarStyles.commandButtonStyle);
-            
+
             GUILayout.Space(5f);
 
             EditorGUI.BeginDisabledGroup(_blockRecompile);
@@ -92,19 +101,19 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
                 groupMenu.ShowAsContext();
             }
 
-            SerializedObject.ApplyModifiedProperties();
+            BuildingSerializedObject.ApplyModifiedProperties();
         }
 
         private static void OnRightToolbarGUI()
         {
-            SerializedObject.Update();
+            BuildingSerializedObject.Update();
 
             if (GUILayout.Button(new GUIContent("", (Texture2D)EditorGUIUtility.IconContent("winbtn_win_restore").image, "Open Project"), ToolbarStyles.commandButtonStyle))
             {
                 CodeEditor.CurrentEditor.OpenProject();
             }
 
-            SerializedObject.ApplyModifiedProperties();
+            BuildingSerializedObject.ApplyModifiedProperties();
         }
 
         private static void Build(UnityBuilding.BuildBehavior behavior)

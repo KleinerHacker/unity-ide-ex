@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
+using UnityEngine;
 using UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets;
 
 namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
@@ -81,8 +82,9 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
                     extraScriptingDefines = PlayerSettings.GetScriptingDefineSymbolsForGroup(buildTargetGroup).Split(',').Concat(buildingType.Defines).Where(x => !string.IsNullOrWhiteSpace(x)).ToArray()
                 };
 
-                if (buildingSettings.Clean && Directory.Exists(targetPath))
+                if (buildingSettings.Clean && Directory.Exists(targetPath) && behavior != BuildBehavior.BuildAssetBundleOnly)
                 {
+                    Debug.Log("[BUILD] Clean output folders...");
                     Directory.Delete(targetPath, true);
                 }
 
@@ -90,10 +92,63 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
                 var oldBuildGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
                 try
                 {
-                    var buildReport = BuildPipeline.BuildPlayer(options);
-                    if (buildReport.summary.result != BuildResult.Succeeded)
+                    if (behavior != BuildBehavior.BuildAssetBundleOnly)
                     {
-                        EditorUtility.DisplayDialog("Build", "Build has failed", "OK");
+                        Debug.Log("[BUILD] Start build...");
+                        var buildReport = BuildPipeline.BuildPlayer(options);
+                        if (buildReport.summary.result != BuildResult.Succeeded)
+                        {
+                            Debug.LogError("[BUILD] Build has failed: " + buildReport.summary.result);
+                            EditorUtility.DisplayDialog("Build", "Build has failed", "OK");
+                            return;
+                        }
+                        
+                        Debug.Log("[BUILD] Build finished");
+                    }
+
+                    if (behavior == BuildBehavior.BuildAssetBundleOnly || buildingSettings.BuildAssetBundles)
+                    {
+                        Debug.Log("[BUILD] Start Asset Bundle Build...");
+                        try
+                        {
+                            var filteredItems = AssetBundleSettings.Singleton.Items
+                                .Where(x => x.BuildAssetBundle)
+                                .GroupBy(x => x.BuildSubPath)
+                                .ToDictionary(x => x.Key, x => x.ToList());
+                            foreach (var item in filteredItems)
+                            {
+                                var assetPathDict = item.Value.ToDictionary(
+                                    x => x.AssetBundleName,
+                                    x => AssetDatabase.GetAssetPathsFromAssetBundle(x.AssetBundleName));
+
+                                if (!Directory.Exists(targetPath + "/" + item.Key))
+                                {
+                                    Directory.CreateDirectory(targetPath + "/" + item.Key);
+                                }
+
+                                var manifest = BuildPipeline.BuildAssetBundles(targetPath + "/" + item.Key, 
+                                    assetPathDict.Select(x => new AssetBundleBuild {assetBundleName = x.Key, assetNames = x.Value}).ToArray(),
+                                    BuildAssetBundleOptions.ForceRebuildAssetBundle, buildingSettings.BuildingData.BuildTarget);
+
+                                if (manifest == null)
+                                {
+                                    Debug.LogError("[BUILD] Asset Bundle build failed");
+                                    EditorUtility.DisplayDialog("Asset Bundle Build", "Asset Bundle Build failed for " + string.Join(',', item.Value.Select(x => x.AssetBundleName)), "OK");
+                                    return;
+                                } 
+                            }
+                            
+                            Debug.Log("[BUILD] Asset Bundles finished");
+
+                            if (behavior == BuildBehavior.BuildAssetBundleOnly && buildingSettings.ShowFolder)
+                            {
+                                Application.OpenURL("file:///" + Environment.CurrentDirectory + "/" + targetPath);
+                            }
+                        }
+                        finally
+                        {
+                            EditorUtility.ClearProgressBar();
+                        }
                     }
                 }
                 finally
@@ -176,6 +231,8 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
                 case BuildBehavior.BuildScriptsOnly:
                     options |= BuildOptions.BuildScriptsOnly;
                     break;
+                case BuildBehavior.BuildAssetBundleOnly:
+                    break;
                 default:
                     throw new NotImplementedException();
             }
@@ -239,6 +296,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
         {
             BuildOnly,
             BuildAndRun,
+            BuildAssetBundleOnly,
             BuildScriptsOnly,
         }
     }

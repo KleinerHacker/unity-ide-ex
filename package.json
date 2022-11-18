@@ -1,6 +1,6 @@
 {
   "name": "org.pcsoft.ide-ex",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "displayName": "IDE Extension for Unity",
   "description": "Extension for Unity for a better IDE.",
   "unity": "2021.3",
@@ -11,9 +11,9 @@
     "media"
   ],
   "dependencies": {
-    "org.pcsoft.editor-ex": "1.1.10",
+    "org.pcsoft.editor-ex": "1.1.11",
     "org.pcsoft.common-ex": "1.1.8",
-    "org.pcsoft.extension": "1.8.0",
+    "org.pcsoft.extension": "1.8.1",
     "com.marijnzwemmer.unity-toolbar-extender": "1.4.1"
   },
   "author": {
