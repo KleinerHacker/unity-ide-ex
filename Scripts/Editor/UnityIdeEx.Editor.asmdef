@@ -1,0 +1,22 @@
+{
+    "name": "UnityIdeEx.Editor",
+    "rootNamespace": "UnityIdeEx.Editor",
+    "references": ["GUID:5d0595cabca3f65418ec01a472735d07",
+"GUID:86c5ae22b787083498226e9faa99731d",
+"GUID:626cca1954403c942aaa892ce194af26",
+"GUID:0a0471484b079be408cb3a0d7fe94736",
+"GUID:df380645f10b7bc4b97d4f5eb6303d95",
+"GUID:457756d89b35d2941b3e7b37b4ece6f1",
+"GUID:15fc0a57446b3144c949da3e2b9737a9"],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
