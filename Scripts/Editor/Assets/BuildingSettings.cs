@@ -11,9 +11,13 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
 {
     internal sealed class BuildingSettings : ProviderAsset<BuildingSettings>
     {
+        #region Static Access
+
         public static BuildingSettings Singleton => GetSingleton("building", "building.asset", "Editor/Resources", BuildingSettingsFactory.Create);
 
         public static SerializedObject SerializedSingleton => GetSerializedSingleton("building", "building.asset", "Editor/Resources", BuildingSettingsFactory.Create);
+
+        #endregion
 
         #region Inspector Data
 
