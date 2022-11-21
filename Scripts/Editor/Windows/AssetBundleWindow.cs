@@ -65,8 +65,6 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Windows
 
                     RebuildBundles();
                     RebuildList();
-
-                    return;
                 }
 
                 EditorGUI.BeginDisabledGroup(_selectedBundle < 0 || _selectedBundle >= _bundles.Length);
@@ -85,10 +83,27 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Windows
                             assetBundleSettings.Items = assetBundleSettings.Items.Remove(_bundles[_selectedBundle]).ToArray();
 
                             RebuildBundles();
-
-                            return;
                         }
                     }
+                }
+
+                if (GUILayout.Button(EditorGUIUtility.IconContent("d_editicon.sml").image, new GUIStyle(EditorStyles.iconButton) { contentOffset = new Vector2(0f, 3f) }))
+                {
+                    var name = EditorUtilityEx.DisplayInputDialog("Add Asset Bundle", "Asset Bundle Name:", _bundles[_selectedBundle].AssetBundleName, "OK", "Cancel");
+                    if (string.IsNullOrEmpty(name))
+                        return;
+                    
+                    Debug.Log("[ASSET BUNDLE] Change name of asset bundle " + name);
+                    foreach (var assetPath in AssetDatabase.GetAssetPathsFromAssetBundle(_bundles[_selectedBundle].AssetBundleName))
+                    {
+                        AssetImporter.GetAtPath(assetPath).assetBundleName = name;
+                    }
+
+                    AssetDatabase.RemoveAssetBundleName(_bundles[_selectedBundle].AssetBundleName, true);
+                    _bundles[_selectedBundle].AssetBundleName = name;
+                    
+                    RebuildBundles();
+                    RebuildList();
                 }
 
                 EditorGUI.EndDisabledGroup();
@@ -141,6 +156,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Windows
                 return;
 
             var assets = AssetDatabase.GetAssetPathsFromAssetBundle(_bundles[_selectedBundle].AssetBundleName)
+                .Take(100)
                 .SelectMany(AssetDatabase.LoadAllAssetsAtPath)
                 .ToList();
             _assetList = new AssetBundleList(assets, _bundles[_selectedBundle].AssetBundleName);
