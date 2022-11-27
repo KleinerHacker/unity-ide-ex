@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditorEx.Runtime.editor_ex.Scripts.Runtime.Assets;
@@ -137,6 +138,16 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
             get => items;
             internal set => items = value;
         }
+
+        #endregion
+    }
+
+    [Serializable]
+    internal class AssetData
+    {
+        #region Properties
+
+        public IDictionary<string, bool> BuildStates { get; set; }
 
         #endregion
     }
