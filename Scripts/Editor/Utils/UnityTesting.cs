@@ -144,7 +144,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
                     if (behavior == null)
                         return;
                     
-                    UnityBuilding.Build(behavior.Value, overwriteData, false);
+                    UnityBuilding.Build(behavior.Value, overwriteData, runTest:false);
                 }
                 else
                 {

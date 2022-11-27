@@ -7,6 +7,7 @@ using UnityEditor.EditorTools;
 using UnityEngine;
 using UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets;
 using UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils;
+using UnityIdeEx.Editor.ide_ex.Scripts.Editor.Windows;
 using UnityToolbarExtender;
 
 namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
@@ -18,7 +19,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
 
         private static readonly BuildingSettings BuildingSettings;
         private static readonly SerializedObject BuildingSerializedObject;
-        
+
         private static readonly AssetBundleSettings AssetBundleSettings;
         private static readonly SerializedObject AssetBundleSerializedObject;
 
@@ -28,17 +29,18 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
         {
             BuildingSettings = BuildingSettings.Singleton;
             BuildingSerializedObject = BuildingSettings.SerializedSingleton;
-            
+
             AssetBundleSettings = AssetBundleSettings.Singleton;
             AssetBundleSerializedObject = AssetBundleSettings.SerializedSingleton;
-            
+
             ToolbarExtender.LeftToolbarGUI.Add(OnLeftToolbarGUI);
             ToolbarExtender.RightToolbarGUI.Insert(0, OnRightToolbarGUI);
 
             BuildMenu.AddItem(new GUIContent("Build"), false, () => Build(UnityBuilding.BuildBehavior.BuildOnly));
             BuildMenu.AddItem(new GUIContent("Build and Run"), false, () => Build(UnityBuilding.BuildBehavior.BuildAndRun));
             BuildMenu.AddSeparator(null);
-            BuildMenu.AddItem(new GUIContent("Build Asset Bundles Only"), false, () => Build(UnityBuilding.BuildBehavior.BuildAssetBundleOnly));
+            BuildMenu.AddItem(new GUIContent("Build only all Asset Bundles"), false, () => Build(UnityBuilding.BuildBehavior.BuildAssetBundleOnly));
+            BuildMenu.AddItem(new GUIContent("Build only selected Asset Bundles..."), false, () => SelectAssetBundles(UnityBuilding.BuildBehavior.BuildAssetBundleOnly));
             BuildMenu.AddSeparator(null);
             BuildMenu.AddItem(new GUIContent("Run Tests"), false, RunTests);
 
@@ -57,7 +59,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
             GUILayout.Label("Build: ", ToolbarStyles.labelStyle);
             BuildingSettings.BuildingData.BuildTarget = (BuildTarget)EditorGUILayout.EnumPopup(null, BuildingSettings.BuildingData.BuildTarget,
                 v => UnityHelper.IsBuildTargetSupported((BuildTarget)v), false, ToolbarStyles.popupStyle, ToolbarLayouts.popupLayout);
-            
+
             if (GUILayout.Button(new GUIContent("", (Texture2D)EditorGUIUtility.IconContent("d_Refresh").image, "Reset to active target"), ToolbarStyles.commandButtonStyle))
             {
                 BuildingSettings.ResetBuildTarget();
@@ -86,11 +88,13 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
                 _blockRecompile = true;
                 CompilationPipeline.RequestScriptCompilation(RequestScriptCompilationOptions.CleanBuildCache);
             }
+
             EditorGUI.EndDisabledGroup();
             if (GUILayout.Button(new GUIContent("", (Texture2D)EditorGUIUtility.IconContent("d_Settings").image, "Build the project"), ToolbarStyles.commandButtonStyle))
             {
                 BuildMenu.ShowAsContext();
             }
+
             if (GUILayout.Button(new GUIContent("", (Texture2D)EditorGUIUtility.IconContent("_Menu").image, "Build a group"), ToolbarStyles.commandButtonStyle))
             {
                 var groupMenu = new GenericMenu();
@@ -98,6 +102,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
                 {
                     groupMenu.AddItem(new GUIContent(groupItem.Name), false, () => UnityBuilding.Build(groupItem));
                 }
+
                 groupMenu.ShowAsContext();
             }
 
@@ -126,6 +131,17 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
         {
             AssetDatabase.SaveAssets();
             UnityTesting.RunTests(BuildingSettings.BuildingData);
+        }
+
+        private static void SelectAssetBundles(UnityBuilding.BuildBehavior behavior)
+        {
+            var window = ScriptableObject.CreateInstance<AssetBundleBuildWindow>();
+            window.ShowModalUtility();
+            if (!window.Result)
+                return;
+
+            AssetDatabase.SaveAssets();
+            UnityBuilding.Build(behavior, assetData: new AssetData { BuildStates = window.BuildStates });
         }
 
         private static class ToolbarLayouts
@@ -165,7 +181,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
                     fontStyle = FontStyle.Normal,
                     stretchWidth = false,
                     fixedHeight = 20f,
-                    margin = new RectOffset(5,5,5,5)
+                    margin = new RectOffset(5, 5, 5, 5)
                 };
 
                 labelStyle = new GUIStyle("Label")
@@ -176,7 +192,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
                     fontStyle = FontStyle.Normal,
                     fixedHeight = 20f,
                     wordWrap = false,
-                    margin = new RectOffset(5,5,5,5)
+                    margin = new RectOffset(5, 5, 5, 5)
                 };
 
                 toggleStyle = new GUIStyle("Toggle")
@@ -187,7 +203,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
                     fontStyle = FontStyle.Normal,
                     fixedHeight = 20f,
                     wordWrap = false,
-                    margin = new RectOffset(5,5,5,5)
+                    margin = new RectOffset(5, 5, 5, 5)
                 };
             }
         }
@@ -196,7 +212,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
         {
             private Action _action;
             private GUIContent _guiContent = new GUIContent();
-            
+
             public override GUIContent toolbarIcon => _guiContent;
 
             public void Setup(Texture2D icon, String tooltip, Action action)

@@ -28,12 +28,12 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
             {
                 foreach (var item in @group.Items)
                 {
-                    Build(BuildBehavior.BuildOnly, item, false);
+                    Build(BuildBehavior.BuildOnly, item, runTest:false);
                 }
             }
         }
 
-        public static void Build(BuildBehavior behavior, BuildingData overwriteData = null, bool runTest = true)
+        public static void Build(BuildBehavior behavior, BuildingData overwriteData = null, AssetData assetData = null, bool runTest = true)
         {
             var buildingSettings = BuildingSettings.Singleton;
 
@@ -112,7 +112,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
                         try
                         {
                             var filteredItems = AssetBundleSettings.Singleton.Items
-                                .Where(x => x.BuildAssetBundle)
+                                .Where(x => assetData == null ? x.BuildAssetBundle : assetData.BuildStates[x.AssetBundleName])
                                 .GroupBy(x => x.BuildSubPath)
                                 .ToDictionary(x => x.Key, x => x.ToList());
                             foreach (var item in filteredItems)
