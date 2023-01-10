@@ -35,7 +35,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
         private bool runTests = true;
 
         [SerializeField]
-        private bool buildAssetBundles = true;
+        private bool buildAssetBundles = false;
 
         [FormerlySerializedAs("targetName")]
         [SerializeField]
