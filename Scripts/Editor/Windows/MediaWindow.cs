@@ -13,7 +13,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Windows
     public sealed class MediaWindow : EditorWindow
     {
         [MenuItem("Window/General/IDE Extensions/Media", priority = 8)]
-        public static void Show()
+        public static void ShowMedia()
         {
             ((EditorWindow)CreateInstance<MediaWindow>()).Show();
         }
