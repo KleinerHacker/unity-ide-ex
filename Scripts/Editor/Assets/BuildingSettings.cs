@@ -1,12 +1,9 @@
 using System;
-using System.Collections.Generic;
 using UnityEditor;
-using UnityEditor.Build;
 using UnityEditorEx.Runtime.editor_ex.Scripts.Runtime.Assets;
 using UnityEngine;
 using UnityEngine.Serialization;
-using UnityExtension.Runtime.extension.Scripts.Runtime.Assets;
-using UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils;
+using UnityIdeEx.Editor.ide_ex.Scripts.Editor.Types;
 
 namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
 {
@@ -23,9 +20,6 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
         #region Inspector Data
 
         [SerializeField]
-        private SingleBuildingData buildingData = new SingleBuildingData();
-
-        [SerializeField]
         private bool clean = true;
 
         [SerializeField]
@@ -35,38 +29,38 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
         private bool runTests = true;
 
         [SerializeField]
-        private bool buildAssetBundles = false;
+        private bool buildAssetBundles;
 
         [FormerlySerializedAs("targetName")]
         [SerializeField]
         private string appName;
 
-        [FormerlySerializedAs("items")]
         [SerializeField]
-        private BuildingTypeItem[] typeItems = Array.Empty<BuildingTypeItem>();
+        private BuildingFlags buildingFlags = BuildingFlags.None;
 
         [SerializeField]
-        private BuildingGroup[] groupItems = Array.Empty<BuildingGroup>();
+        private BuildingGroupSettings<BuildingTargetSettingsWindows>[] windows = Array.Empty<BuildingGroupSettings<BuildingTargetSettingsWindows>>();
+
+        [SerializeField]
+        private BuildingGroupSettings<BuildingTargetSettingsLinux>[] linux = Array.Empty<BuildingGroupSettings<BuildingTargetSettingsLinux>>();
+
+        [SerializeField]
+        private BuildingGroupSettings<BuildingTargetSettingsMacOS>[] macOS = Array.Empty<BuildingGroupSettings<BuildingTargetSettingsMacOS>>();
+
+        [SerializeField]
+        private BuildingGroupSettings<BuildingTargetSettingsAndroid>[] android = Array.Empty<BuildingGroupSettings<BuildingTargetSettingsAndroid>>();
+
+        [SerializeField]
+        private BuildingGroupSettings<BuildingTargetSettingsIOS>[] ios = Array.Empty<BuildingGroupSettings<BuildingTargetSettingsIOS>>();
+
+        [SerializeField]
+        private BuildingGroupSettings<BuildingTargetSettingsWebGL>[] webGL = Array.Empty<BuildingGroupSettings<BuildingTargetSettingsWebGL>>();
 
         #endregion
 
         #region Properties
 
-        public BuildingData BuildingData => buildingData;
-
         public string AppName => appName;
-
-        public BuildingTypeItem[] TypeItems
-        {
-            get => typeItems;
-            internal set => typeItems = value;
-        }
-
-        public BuildingGroup[] GroupItems
-        {
-            get => groupItems;
-            internal set => groupItems = value;
-        }
 
         public bool Clean
         {
@@ -92,6 +86,48 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
             internal set => buildAssetBundles = value;
         }
 
+        public BuildingFlags BuildingFlags
+        {
+            get => buildingFlags;
+            internal set => buildingFlags = value;
+        }
+
+        public BuildingGroupSettings<BuildingTargetSettingsWindows>[] Windows
+        {
+            get => windows;
+            internal set => windows = value;
+        }
+
+        public BuildingGroupSettings<BuildingTargetSettingsLinux>[] Linux
+        {
+            get => linux;
+            internal set => linux = value;
+        }
+
+        public BuildingGroupSettings<BuildingTargetSettingsMacOS>[] MacOS
+        {
+            get => macOS;
+            internal set => macOS = value;
+        }
+
+        public BuildingGroupSettings<BuildingTargetSettingsAndroid>[] Android
+        {
+            get => android;
+            internal set => android = value;
+        }
+
+        public BuildingGroupSettings<BuildingTargetSettingsIOS>[] IOS
+        {
+            get => ios;
+            internal set => ios = value;
+        }
+
+        public BuildingGroupSettings<BuildingTargetSettingsWebGL>[] WebGL
+        {
+            get => webGL;
+            internal set => webGL = value;
+        }
+
         #endregion
 
         #region Builtin Methods
@@ -105,15 +141,10 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
         }
 
         #endregion
-
-        internal void ResetBuildTarget()
-        {
-            buildingData.ResetBuildTarget();
-        }
     }
 
     [Serializable]
-    internal sealed class BuildingGroup
+    public sealed class BuildingGroupSettings<T> where T : BuildingTargetSettings
     {
         #region Inspector Data
 
@@ -121,7 +152,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
         private string name;
 
         [SerializeField]
-        private BuildingData[] items;
+        private T settings;
 
         #endregion
 
@@ -133,203 +164,67 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
             internal set => name = value;
         }
 
-        public BuildingData[] Items
+        public T Settings
         {
-            get => items;
-            internal set => items = value;
+            get => settings;
+            internal set => settings = value;
         }
 
         #endregion
     }
 
     [Serializable]
-    internal class AssetData
-    {
-        #region Properties
-
-        public IDictionary<string, bool> BuildStates { get; set; }
-
-        #endregion
-    }
-
-    [Serializable]
-    internal class BuildingData
+    public abstract class BuildingTargetSettings
     {
         #region Inspector Data
 
         [SerializeField]
-        private BuildTarget buildTarget;
+        private IL2CPPBackend scriptingBackend = IL2CPPBackend.Debug;
 
         [SerializeField]
-        private int buildType;
+        private string[] additionalScriptingDefineSymbols = Array.Empty<string>();
 
         [SerializeField]
-        private BuildExtras buildExtras;
+        private string[] additionalCompilerArguments = Array.Empty<string>();
 
         #endregion
 
         #region Properties
 
-        public virtual BuildTarget BuildTarget
+        public abstract TargetPlatform Platform { get; }
+
+        public IL2CPPBackend ScriptingBackend
         {
-            get => buildTarget;
-            internal set => buildTarget = value;
+            get => scriptingBackend;
+            internal set => scriptingBackend = value;
         }
 
-        public int BuildType
+        public string[] AdditionalScriptingDefineSymbols
         {
-            get => buildType;
-            internal set => buildType = value;
+            get => additionalScriptingDefineSymbols;
+            internal set => additionalScriptingDefineSymbols = value;
         }
 
-        public BuildExtras BuildExtras
+        public string[] AdditionalCompilerArguments
         {
-            get => buildExtras;
-            internal set => buildExtras = value;
+            get => additionalCompilerArguments;
+            internal set => additionalCompilerArguments = value;
         }
 
         #endregion
     }
 
     [Serializable]
-    internal sealed class SingleBuildingData : BuildingData
+    public abstract class BuildingTargetSettingsDesktop : BuildingTargetSettings
     {
         #region Inspector Data
-
-        [HideInInspector]
-        [SerializeField]
-        private bool buildTargetOverwritten;
-
-        #endregion
-
-        #region Property Data
-
-        public override BuildTarget BuildTarget
-        {
-            get => buildTargetOverwritten ? base.BuildTarget : EditorUserBuildSettings.activeBuildTarget;
-            internal set
-            {
-                if (base.BuildTarget == value)
-                    return;
-
-                base.BuildTarget = value;
-                buildTargetOverwritten = true;
-            }
-        }
-
-        #endregion
-
-        internal void ResetBuildTarget()
-        {
-            buildTargetOverwritten = false;
-        }
-    }
-
-    [Serializable]
-    internal sealed class BuildingTypeItem
-    {
-        #region Inspector Data
-
-        [SerializeField]
-        private string name;
-
-        [Space]
-        [SerializeField]
-        [Tooltip("Sub path of default target path <" + UnityBuilding.DefaultTargetPath + ">")]
-        private string targetPath;
-
-        [Header("Build Options")]
-        [SerializeField]
-        private bool developmentBuild;
-
-        [SerializeField]
-        private bool allowDebugging;
-
-        [SerializeField]
-        private bool compress;
-
-        [SerializeField]
-        private IL2CPPSettings cppSettings;
-
-        [SerializeField]
-        private bool cppIncrementalBuild;
-
-#if UNITY_2021_2_OR_NEWER
-        [SerializeField]
-        private Il2CppCodeGeneration cppCodeGeneration = Il2CppCodeGeneration.OptimizeSpeed;
-#endif
 
         [SerializeField]
         private ManagedStrippingLevel strippingLevel = ManagedStrippingLevel.Disabled;
 
-        [Header("Android")]
-        [SerializeField]
-        private AndroidArchitecture androidArchitecture = AndroidArchitecture.All;
-
-        [SerializeField]
-        private bool buildAppBundle;
-
-        [Header("iOS")]
-        [SerializeField]
-        private AppleMobileArchitecture appleMobileArchitecture = AppleMobileArchitecture.Universal;
-
-        [Space]
-        [SerializeField]
-        private string[] defines;
-
         #endregion
 
         #region Properties
-
-        public string Name
-        {
-            get => name;
-            internal set => name = value;
-        }
-
-        public string TargetPath
-        {
-            get => targetPath;
-            internal set => targetPath = value;
-        }
-
-        public bool DevelopmentBuild
-        {
-            get => developmentBuild;
-            internal set => developmentBuild = value;
-        }
-
-        public bool AllowDebugging
-        {
-            get => allowDebugging;
-            internal set => allowDebugging = value;
-        }
-
-        public bool Compress
-        {
-            get => compress;
-            internal set => compress = value;
-        }
-
-        public IL2CPPSettings CppSettings
-        {
-            get => cppSettings;
-            internal set => cppSettings = value;
-        }
-
-        public bool CppIncrementalBuild
-        {
-            get => cppIncrementalBuild;
-            internal set => cppIncrementalBuild = value;
-        }
-
-#if UNITY_2021_2_OR_NEWER
-        public Il2CppCodeGeneration CppCodeGeneration
-        {
-            get => cppCodeGeneration;
-            internal set => cppCodeGeneration = value;
-        }
-#endif
 
         public ManagedStrippingLevel StrippingLevel
         {
@@ -337,51 +232,27 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
             internal set => strippingLevel = value;
         }
 
-        public AndroidArchitecture AndroidArchitecture
-        {
-            get => androidArchitecture;
-            internal set => androidArchitecture = value;
-        }
-
-        public bool BuildAppBundle
-        {
-            get => buildAppBundle;
-            internal set => buildAppBundle = value;
-        }
-
-        public AppleMobileArchitecture AppleMobileArchitecture
-        {
-            get => appleMobileArchitecture;
-            internal set => appleMobileArchitecture = value;
-        }
-
-        public string[] Defines
-        {
-            get => defines;
-            internal set => defines = value;
-        }
-
         #endregion
     }
 
-    public enum IL2CPPSettings
+    [Serializable]
+    public abstract class BuildingTargetSettingsMobile : BuildingTargetSettings
     {
-        Deactivated,
-        Debug,
-        Release,
-        Master,
-    }
+        #region Inspector Data
 
-    [Flags]
-    public enum BuildExtras
-    {
-        None = 0x0000,
-        CodeCoverage = 0x0001,
-        UseProfiler = 0x0002,
-        StrictMode = 0x0004,
-        WaitForConnection = 0x0010,
-        ConnectToHost = 0x0020,
-        DetailedReport = 0x0040,
-        SymlinkSources = 0x0080
+        [SerializeField]
+        private ManagedStrippingLevel strippingLevel = ManagedStrippingLevel.Disabled;
+
+        #endregion
+
+        #region Properties
+
+        public ManagedStrippingLevel StrippingLevel
+        {
+            get => strippingLevel;
+            internal set => strippingLevel = value;
+        }
+
+        #endregion
     }
 }

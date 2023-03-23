@@ -1,13 +1,14 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using Unity.CodeEditor;
+using UnityCommonEx.Runtime.common_ex.Scripts.Runtime.Utils.Extensions;
 using UnityEditor;
 using UnityEditor.Compilation;
 using UnityEditor.EditorTools;
 using UnityEngine;
 using UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets;
-using UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils;
-using UnityIdeEx.Editor.ide_ex.Scripts.Editor.Windows;
+using UnityIdeEx.Editor.ide_ex.Scripts.Editor.Types;
 using UnityToolbarExtender;
 
 namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
@@ -24,6 +25,9 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
         private static readonly SerializedObject AssetBundleSerializedObject;
 
         private static bool _blockRecompile;
+        private static int _targetPlatformIndex = -1;
+        private static int _architectureIndex = -1;
+        private static int _scriptingBackendIndex = -1;
 
         static BuildingToolbar()
         {
@@ -36,13 +40,13 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
             ToolbarExtender.LeftToolbarGUI.Add(OnLeftToolbarGUI);
             ToolbarExtender.RightToolbarGUI.Insert(0, OnRightToolbarGUI);
 
-            BuildMenu.AddItem(new GUIContent("Build"), false, () => Build(UnityBuilding.BuildBehavior.BuildOnly));
-            BuildMenu.AddItem(new GUIContent("Build and Run"), false, () => Build(UnityBuilding.BuildBehavior.BuildAndRun));
-            BuildMenu.AddSeparator(null);
-            BuildMenu.AddItem(new GUIContent("Build only all Asset Bundles"), false, () => Build(UnityBuilding.BuildBehavior.BuildAssetBundleOnly));
-            BuildMenu.AddItem(new GUIContent("Build only selected Asset Bundles..."), false, () => SelectAssetBundles(UnityBuilding.BuildBehavior.BuildAssetBundleOnly));
-            BuildMenu.AddSeparator(null);
-            BuildMenu.AddItem(new GUIContent("Run Tests"), false, RunTests);
+            // BuildMenu.AddItem(new GUIContent("Build"), false, () => Build(UnityBuilding.BuildBehavior.BuildOnly));
+            // BuildMenu.AddItem(new GUIContent("Build and Run"), false, () => Build(UnityBuilding.BuildBehavior.BuildAndRun));
+            // BuildMenu.AddSeparator(null);
+            // BuildMenu.AddItem(new GUIContent("Build only all Asset Bundles"), false, () => Build(UnityBuilding.BuildBehavior.BuildAssetBundleOnly));
+            // BuildMenu.AddItem(new GUIContent("Build only selected Asset Bundles..."), false, () => SelectAssetBundles(UnityBuilding.BuildBehavior.BuildAssetBundleOnly));
+            // BuildMenu.AddSeparator(null);
+            // BuildMenu.AddItem(new GUIContent("Run Tests"), false, RunTests);
 
             CompilationPipeline.compilationStarted += _ => _blockRecompile = true;
             CompilationPipeline.compilationFinished += _ => _blockRecompile = false;
@@ -56,22 +60,52 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
 
             GUILayout.Space(5f);
 
-            GUILayout.Label("Build: ", ToolbarStyles.labelStyle);
-            BuildingSettings.BuildingData.BuildTarget = (BuildTarget)EditorGUILayout.EnumPopup(null, BuildingSettings.BuildingData.BuildTarget,
-                v => UnityHelper.IsBuildTargetSupported((BuildTarget)v), false, ToolbarStyles.popupStyle, ToolbarLayouts.popupLayout);
+            var targets = Enum.GetValues(typeof(TargetPlatform))
+                .Cast<TargetPlatform>().ToArray();
+            if (_targetPlatformIndex < 0)
+            {
+                _targetPlatformIndex = targets.IndexOf(x => x == EditorUserBuildSettings.activeBuildTarget.ToTargetPlatform());
+            }
+
+            _targetPlatformIndex = EditorGUILayout.Popup(_targetPlatformIndex, targets.Select(x => x.ToString()).ToArray(), ToolbarStyles.popupStyle, ToolbarLayouts.popupSmallLayout);
+            var targetFieldInfo = typeof(TargetPlatform).GetField((_targetPlatformIndex < 0 ? TargetPlatform.Windows : targets[_targetPlatformIndex]).ToString());
+            var targetSettings = targetFieldInfo.GetCustomAttribute<SupportedSettingsAttribute>();
+
+            var architectures = Enum.GetValues(typeof(TargetArchitecture))
+                .Cast<TargetArchitecture>()
+                .Where(x => x is not (TargetArchitecture.All or TargetArchitecture.None or TargetArchitecture.ClientAll or TargetArchitecture.ServerAll))
+                .Where(x => targetSettings.TargetArchitecture.HasFlag(x))
+                .ToArray();
+            if (_architectureIndex < 0)
+            {
+                _architectureIndex = architectures.IndexOf(x => x == EditorUserBuildSettings.activeBuildTarget.ToTargetArchitecture(EditorUserBuildSettings.standaloneBuildSubtarget));
+            }
+
+            _architectureIndex = EditorGUILayout.Popup(_architectureIndex, architectures.Select(x => x.ToString()).ToArray(), ToolbarStyles.popupStyle, ToolbarLayouts.popupSmallLayout);
+
+            var backends = Enum.GetValues(typeof(ScriptingBackend))
+                .Cast<ScriptingBackend>()
+                .Where(x => x is not (ScriptingBackend.All or ScriptingBackend.None))
+                .Where(x => targetSettings.ScriptingBackend.HasFlag(x))
+                .ToArray();
+            if (_scriptingBackendIndex < 0)
+            {
+                _scriptingBackendIndex = backends.IndexOf(x => x == (PlayerSettings.GetIncrementalIl2CppBuild(EditorUserBuildSettings.selectedBuildTargetGroup) ? ScriptingBackend.IL2CPP : ScriptingBackend.Mono));
+            }
+
+            _scriptingBackendIndex = EditorGUILayout.Popup(_scriptingBackendIndex, backends.Select(x => x.ToString()).ToArray(), ToolbarStyles.popupStyle, ToolbarLayouts.popupSmallLayout);
 
             if (GUILayout.Button(new GUIContent("", (Texture2D)EditorGUIUtility.IconContent("d_Refresh").image, "Reset to active target"), ToolbarStyles.commandButtonStyle))
             {
-                BuildingSettings.ResetBuildTarget();
+                _targetPlatformIndex = targets.IndexOf(x => x == EditorUserBuildSettings.activeBuildTarget.ToTargetPlatform());
+                _architectureIndex = architectures.IndexOf(x => x == EditorUserBuildSettings.activeBuildTarget.ToTargetArchitecture(EditorUserBuildSettings.standaloneBuildSubtarget));
+                _scriptingBackendIndex = backends.IndexOf(x => x == (PlayerSettings.GetIncrementalIl2CppBuild(EditorUserBuildSettings.selectedBuildTargetGroup) ? ScriptingBackend.IL2CPP : ScriptingBackend.Mono));
             }
-
-            BuildingSettings.BuildingData.BuildType = EditorGUILayout.Popup(BuildingSettings.BuildingData.BuildType, BuildingSettings.TypeItems.Select(x => x.Name).ToArray(),
-                ToolbarStyles.popupStyle, ToolbarLayouts.popupSmallLayout);
 
             GUILayout.Space(5f);
 
             GUILayout.Label("Flags: ", ToolbarStyles.labelStyle);
-            BuildingSettings.BuildingData.BuildExtras = (BuildExtras)EditorGUILayout.EnumFlagsField(BuildingSettings.BuildingData.BuildExtras, ToolbarStyles.popupStyle, ToolbarLayouts.popupSmallLayout);
+            BuildingSettings.BuildingFlags = (BuildingFlags)EditorGUILayout.EnumFlagsField(BuildingSettings.BuildingFlags, ToolbarStyles.popupStyle, ToolbarLayouts.popupSmallLayout);
 
             GUILayout.Space(5f);
 
@@ -95,17 +129,6 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
                 BuildMenu.ShowAsContext();
             }
 
-            if (GUILayout.Button(new GUIContent("", (Texture2D)EditorGUIUtility.IconContent("_Menu").image, "Build a group"), ToolbarStyles.commandButtonStyle))
-            {
-                var groupMenu = new GenericMenu();
-                foreach (var groupItem in BuildingSettings.GroupItems)
-                {
-                    groupMenu.AddItem(new GUIContent(groupItem.Name), false, () => UnityBuilding.Build(groupItem));
-                }
-
-                groupMenu.ShowAsContext();
-            }
-
             BuildingSerializedObject.ApplyModifiedProperties();
         }
 
@@ -121,28 +144,28 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
             BuildingSerializedObject.ApplyModifiedProperties();
         }
 
-        private static void Build(UnityBuilding.BuildBehavior behavior)
-        {
-            AssetDatabase.SaveAssets();
-            UnityBuilding.Build(behavior);
-        }
+        // private static void Build(UnityBuilding.BuildBehavior behavior)
+        // {
+        //     AssetDatabase.SaveAssets();
+        //     UnityBuilding.Build(behavior);
+        // }
 
         private static void RunTests()
         {
             AssetDatabase.SaveAssets();
-            UnityTesting.RunTests(BuildingSettings.BuildingData);
+            //UnityTesting.RunTests(BuildingSettings.BuildingData);
         }
 
-        private static void SelectAssetBundles(UnityBuilding.BuildBehavior behavior)
-        {
-            var window = ScriptableObject.CreateInstance<AssetBundleBuildWindow>();
-            window.ShowModalUtility();
-            if (!window.Result)
-                return;
-
-            AssetDatabase.SaveAssets();
-            UnityBuilding.Build(behavior, assetData: new AssetData { BuildStates = window.BuildStates });
-        }
+        // private static void SelectAssetBundles(UnityBuilding.BuildBehavior behavior)
+        // {
+        //     var window = ScriptableObject.CreateInstance<AssetBundleBuildWindow>();
+        //     window.ShowModalUtility();
+        //     if (!window.Result)
+        //         return;
+        //
+        //     AssetDatabase.SaveAssets();
+        //     //UnityBuilding.Build(behavior, assetData: new AssetData { BuildStates = window.BuildStates });
+        // }
 
         private static class ToolbarLayouts
         {

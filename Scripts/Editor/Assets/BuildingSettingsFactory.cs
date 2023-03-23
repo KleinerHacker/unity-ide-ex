@@ -1,6 +1,6 @@
 using UnityEditor;
-using UnityEditor.Build;
 using UnityEngine;
+using UnityIdeEx.Editor.ide_ex.Scripts.Editor.Types;
 
 namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
 {
@@ -9,146 +9,162 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
         public static BuildingSettings Create()
         {
             var settings = ScriptableObject.CreateInstance<BuildingSettings>();
-            settings.TypeItems = new[]
-            {
-                new BuildingTypeItem
-                {
-                    Name = "Debug",
-                    TargetPath = "Debug",
-                    DevelopmentBuild = true,
-                    Compress = false,
-                    AllowDebugging = true,
-                    Defines = new[] { "DEBUG" },
-                    CppSettings = IL2CPPSettings.Deactivated,
-                    StrippingLevel = ManagedStrippingLevel.Disabled,
-                    BuildAppBundle = false,
-                },
-                new BuildingTypeItem
-                {
-                    Name = "Debug Native",
-                    TargetPath = "DebugNative",
-                    DevelopmentBuild = true,
-                    Compress = false,
-                    AllowDebugging = true,
-                    Defines = new[] { "DEBUG" },
-                    CppSettings = IL2CPPSettings.Debug,
-                    CppIncrementalBuild = true,
-#if UNITY_2021_2_OR_NEWER
-                    CppCodeGeneration = Il2CppCodeGeneration.OptimizeSize,
-#endif
-                    StrippingLevel = ManagedStrippingLevel.Disabled,
-                    BuildAppBundle = false,
-                },
-                new BuildingTypeItem
-                {
-                    Name = "Release",
-                    TargetPath = "Release",
-                    DevelopmentBuild = false,
-                    Compress = true,
-                    AllowDebugging = false,
-                    Defines = new[] { "RELEASE" },
-                    CppSettings = IL2CPPSettings.Deactivated,
-                    StrippingLevel = ManagedStrippingLevel.Low,
-                    BuildAppBundle = true,
-                },
-                new BuildingTypeItem
-                {
-                    Name = "Release Native",
-                    TargetPath = "ReleaseNative",
-                    DevelopmentBuild = false,
-                    Compress = true,
-                    AllowDebugging = false,
-                    Defines = new[] { "RELEASE" },
-                    CppSettings = IL2CPPSettings.Master,
-                    CppIncrementalBuild = false,
-#if UNITY_2021_2_OR_NEWER
-                    CppCodeGeneration = Il2CppCodeGeneration.OptimizeSpeed,
-#endif
-                    StrippingLevel = ManagedStrippingLevel.Low,
-                    BuildAppBundle = true,
-                }
-            };
-            settings.GroupItems = new[]
-            {
-                new BuildingGroup
-                {
-                    Name = "Debug",
-                    Items = new[]
-                    {
-                        new BuildingData
-                        {
-                            BuildTarget = EditorUserBuildSettings.activeBuildTarget,
-                            BuildType = 0,
-                            BuildExtras = BuildExtras.None
-                        },
-                        new BuildingData
-                        {
-                            BuildTarget = EditorUserBuildSettings.activeBuildTarget,
-                            BuildType = 1,
-                            BuildExtras = BuildExtras.None
-                        }
-                    }
-                },
-                new BuildingGroup
-                {
-                    Name = "Release",
-                    Items = new[]
-                    {
-                        new BuildingData
-                        {
-                            BuildTarget = EditorUserBuildSettings.activeBuildTarget,
-                            BuildType = 2,
-                            BuildExtras = BuildExtras.None
-                        },
-                        new BuildingData
-                        {
-                            BuildTarget = EditorUserBuildSettings.activeBuildTarget,
-                            BuildType = 3,
-                            BuildExtras = BuildExtras.None
-                        }
-                    }
-                },
-                new BuildingGroup
-                {
-                    Name = "Mono",
-                    Items = new[]
-                    {
-                        new BuildingData
-                        {
-                            BuildTarget = EditorUserBuildSettings.activeBuildTarget,
-                            BuildType = 0,
-                            BuildExtras = BuildExtras.None
-                        },
-                        new BuildingData
-                        {
-                            BuildTarget = EditorUserBuildSettings.activeBuildTarget,
-                            BuildType = 2,
-                            BuildExtras = BuildExtras.None
-                        }
-                    }
-                },
-                new BuildingGroup
-                {
-                    Name = "IL2CPP",
-                    Items = new[]
-                    {
-                        new BuildingData
-                        {
-                            BuildTarget = EditorUserBuildSettings.activeBuildTarget,
-                            BuildType = 1,
-                            BuildExtras = BuildExtras.None
-                        },
-                        new BuildingData
-                        {
-                            BuildTarget = EditorUserBuildSettings.activeBuildTarget,
-                            BuildType = 3,
-                            BuildExtras = BuildExtras.None
-                        }
-                    }
-                }
-            };
+            CreateForWindows(settings);
+            CreateForLinux(settings);
+            CreateForMacOS(settings);
+            CreateForAndroid(settings);
+            CreateForIOS(settings);
+            CreateForWebGL(settings);
 
             return settings;
+        }
+
+        private static void CreateForWindows(BuildingSettings settings)
+        {
+            settings.Windows = new[]
+            {
+                new BuildingGroupSettings<BuildingTargetSettingsWindows>
+                {
+                    Name = "Debug",
+                    Settings = new BuildingTargetSettingsWindows
+                    {
+                        ScriptingBackend = IL2CPPBackend.Debug,
+                        StrippingLevel = ManagedStrippingLevel.Disabled
+                    }
+                },
+                new BuildingGroupSettings<BuildingTargetSettingsWindows>
+                {
+                    Name = "Release",
+                    Settings = new BuildingTargetSettingsWindows
+                    {
+                        ScriptingBackend = IL2CPPBackend.Master,
+                        StrippingLevel = ManagedStrippingLevel.Low
+                    }
+                }
+            };
+        }
+
+        private static void CreateForLinux(BuildingSettings settings)
+        {
+            settings.Linux = new[]
+            {
+                new BuildingGroupSettings<BuildingTargetSettingsLinux>
+                {
+                    Name = "Debug",
+                    Settings = new BuildingTargetSettingsLinux
+                    {
+                        ScriptingBackend = IL2CPPBackend.Debug,
+                        StrippingLevel = ManagedStrippingLevel.Disabled
+                    }
+                },
+                new BuildingGroupSettings<BuildingTargetSettingsLinux>
+                {
+                    Name = "Release",
+                    Settings = new BuildingTargetSettingsLinux
+                    {
+                        ScriptingBackend = IL2CPPBackend.Master,
+                        StrippingLevel = ManagedStrippingLevel.Low
+                    }
+                }
+            };
+        }
+
+        private static void CreateForMacOS(BuildingSettings settings)
+        {
+            settings.MacOS = new[]
+            {
+                new BuildingGroupSettings<BuildingTargetSettingsMacOS>
+                {
+                    Name = "Debug",
+                    Settings = new BuildingTargetSettingsMacOS
+                    {
+                        ScriptingBackend = IL2CPPBackend.Debug,
+                        StrippingLevel = ManagedStrippingLevel.Disabled
+                    }
+                },
+                new BuildingGroupSettings<BuildingTargetSettingsMacOS>
+                {
+                    Name = "Release",
+                    Settings = new BuildingTargetSettingsMacOS
+                    {
+                        ScriptingBackend = IL2CPPBackend.Master,
+                        StrippingLevel = ManagedStrippingLevel.Low
+                    }
+                }
+            };
+        }
+
+        private static void CreateForAndroid(BuildingSettings settings)
+        {
+            settings.Android = new[]
+            {
+                new BuildingGroupSettings<BuildingTargetSettingsAndroid>
+                {
+                    Name = "Debug",
+                    Settings = new BuildingTargetSettingsAndroid
+                    {
+                        ScriptingBackend = IL2CPPBackend.Debug,
+                        StrippingLevel = ManagedStrippingLevel.Disabled
+                    }
+                },
+                new BuildingGroupSettings<BuildingTargetSettingsAndroid>
+                {
+                    Name = "Release",
+                    Settings = new BuildingTargetSettingsAndroid
+                    {
+                        ScriptingBackend = IL2CPPBackend.Master,
+                        StrippingLevel = ManagedStrippingLevel.Low
+                    }
+                }
+            };
+        }
+
+        private static void CreateForIOS(BuildingSettings settings)
+        {
+            settings.IOS = new[]
+            {
+                new BuildingGroupSettings<BuildingTargetSettingsIOS>
+                {
+                    Name = "Debug",
+                    Settings = new BuildingTargetSettingsIOS
+                    {
+                        ScriptingBackend = IL2CPPBackend.Debug,
+                        StrippingLevel = ManagedStrippingLevel.Disabled
+                    }
+                },
+                new BuildingGroupSettings<BuildingTargetSettingsIOS>
+                {
+                    Name = "Release",
+                    Settings = new BuildingTargetSettingsIOS
+                    {
+                        ScriptingBackend = IL2CPPBackend.Master,
+                        StrippingLevel = ManagedStrippingLevel.Low
+                    }
+                }
+            };
+        }
+
+        private static void CreateForWebGL(BuildingSettings settings)
+        {
+            settings.WebGL = new[]
+            {
+                new BuildingGroupSettings<BuildingTargetSettingsWebGL>
+                {
+                    Name = "Debug",
+                    Settings = new BuildingTargetSettingsWebGL
+                    {
+                        ScriptingBackend = IL2CPPBackend.Debug
+                    }
+                },
+                new BuildingGroupSettings<BuildingTargetSettingsWebGL>
+                {
+                    Name = "Release",
+                    Settings = new BuildingTargetSettingsWebGL
+                    {
+                        ScriptingBackend = IL2CPPBackend.Master
+                    }
+                }
+            };
         }
     }
 }
