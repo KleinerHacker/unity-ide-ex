@@ -100,20 +100,24 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
             {
                 new BuildingGroupSettings<BuildingTargetSettingsAndroid>
                 {
-                    Name = "Debug",
+                    Name = "Debug (*.apk)",
                     Settings = new BuildingTargetSettingsAndroid
                     {
                         ScriptingBackend = IL2CPPBackend.Debug,
-                        StrippingLevel = ManagedStrippingLevel.Disabled
+                        StrippingLevel = ManagedStrippingLevel.Disabled,
+                        TargetArchive = AndroidTargetArchive.ApplicationPackage,
+                        TargetAndroidArchitecture = AndroidArchitecture.X86_64,
                     }
                 },
                 new BuildingGroupSettings<BuildingTargetSettingsAndroid>
                 {
-                    Name = "Release",
+                    Name = "Release (*.aab)",
                     Settings = new BuildingTargetSettingsAndroid
                     {
                         ScriptingBackend = IL2CPPBackend.Master,
-                        StrippingLevel = ManagedStrippingLevel.Low
+                        StrippingLevel = ManagedStrippingLevel.Low,
+                        TargetArchive = AndroidTargetArchive.ApplicationBundle,
+                        TargetAndroidArchitecture = AndroidArchitecture.All,
                     }
                 }
             };

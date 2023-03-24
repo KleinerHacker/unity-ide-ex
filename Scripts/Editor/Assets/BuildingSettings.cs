@@ -39,6 +39,18 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
         private BuildingFlags buildingFlags = BuildingFlags.None;
 
         [SerializeField]
+        private TargetPlatform selectedTargetPlatform = TargetPlatform.Windows;
+
+        [SerializeField]
+        private TargetArchitecture selectedTargetArchitecture = TargetArchitecture.ClientX64;
+
+        [SerializeField]
+        private ScriptingBackend selectedScriptingBackend = ScriptingBackend.Mono;
+
+        [SerializeField]
+        private int selectedGroup = 0;
+
+        [SerializeField]
         private BuildingGroupSettings<BuildingTargetSettingsWindows>[] windows = Array.Empty<BuildingGroupSettings<BuildingTargetSettingsWindows>>();
 
         [SerializeField]
@@ -59,6 +71,8 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
         #endregion
 
         #region Properties
+
+        internal bool Initialized { get; set; }
 
         public string AppName => appName;
 
@@ -90,6 +104,30 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
         {
             get => buildingFlags;
             internal set => buildingFlags = value;
+        }
+
+        public TargetPlatform SelectedTargetPlatform
+        {
+            get => selectedTargetPlatform;
+            internal set => selectedTargetPlatform = value;
+        }
+
+        public TargetArchitecture SelectedTargetArchitecture
+        {
+            get => selectedTargetArchitecture;
+            internal set => selectedTargetArchitecture = value;
+        }
+
+        public ScriptingBackend SelectedScriptingBackend
+        {
+            get => selectedScriptingBackend;
+            internal set => selectedScriptingBackend = value;
+        }
+
+        public int SelectedGroup
+        {
+            get => selectedGroup;
+            internal set => selectedGroup = value;
         }
 
         public BuildingGroupSettings<BuildingTargetSettingsWindows>[] Windows
