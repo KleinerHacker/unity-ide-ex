@@ -43,7 +43,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
             BuildMenu.AddItem(new GUIContent("Build and Run"), false, () => Build(UnityBuilding.BuildBehavior.BuildAndRun));
             BuildMenu.AddSeparator(null);
             BuildMenu.AddItem(new GUIContent("Build only all Asset Bundles"), false, () => Build(UnityBuilding.BuildBehavior.BuildAssetBundleOnly));
-            BuildMenu.AddItem(new GUIContent("Build only selected Asset Bundles..."), false, () => SelectAssetBundles(UnityBuilding.BuildBehavior.BuildAssetBundleOnly));
+            //BuildMenu.AddItem(new GUIContent("Build only selected Asset Bundles..."), false, () => SelectAssetBundles(UnityBuilding.BuildBehavior.BuildAssetBundleOnly));
             BuildMenu.AddSeparator(null);
             BuildMenu.AddItem(new GUIContent("Run Tests"), false, RunTests);
 

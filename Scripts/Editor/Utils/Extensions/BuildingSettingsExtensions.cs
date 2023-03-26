@@ -41,5 +41,33 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils.Extensions
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
+
+        public static BuildingGroupSettings GetSelectedGroupSettings(this BuildingSettings settings)
+        {
+            return settings.SelectedTargetPlatform switch
+            {
+                TargetPlatform.Windows => settings.Windows[settings.SelectedGroup],
+                TargetPlatform.Linux => settings.Linux[settings.SelectedGroup],
+                TargetPlatform.MacOS => settings.MacOS[settings.SelectedGroup],
+                TargetPlatform.Android => settings.Android[settings.SelectedGroup],
+                TargetPlatform.IOS => settings.IOS[settings.SelectedGroup],
+                TargetPlatform.WebGL => settings.WebGL[settings.SelectedGroup],
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }
+
+        public static BuildingTargetSettings GetSelectedTargetSettings(this BuildingSettings settings)
+        {
+            return settings.SelectedTargetPlatform switch
+            {
+                TargetPlatform.Windows => settings.Windows[settings.SelectedGroup].Settings,
+                TargetPlatform.Linux => settings.Linux[settings.SelectedGroup].Settings,
+                TargetPlatform.MacOS => settings.MacOS[settings.SelectedGroup].Settings,
+                TargetPlatform.Android => settings.Android[settings.SelectedGroup].Settings,
+                TargetPlatform.IOS => settings.IOS[settings.SelectedGroup].Settings,
+                TargetPlatform.WebGL => settings.WebGL[settings.SelectedGroup].Settings,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }
     }
 }

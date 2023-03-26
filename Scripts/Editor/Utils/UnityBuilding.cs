@@ -89,7 +89,8 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
                     scenes = KnownScenes,
                     target = buildingSettings.ToBuildTarget(),
                     locationPathName = targetPath + "/" + appName,
-                    options = CalculateOptions(buildingSettings.BuildingFlags, behavior, buildingSettings.Clean, buildingSettings.ShowFolder),
+                    options = CalculateOptions(buildingSettings.BuildingFlags, behavior, buildingSettings.Clean, buildingSettings.ShowFolder,
+                        buildingSettings.GetSelectedTargetSettings()),
                     extraScriptingDefines = PlayerSettings.GetScriptingDefineSymbolsForGroup(buildTargetGroup).Split(',')
                         .Concat(groupSettings.Settings.AdditionalScriptingDefineSymbols)
                         .Where(x => !string.IsNullOrWhiteSpace(x))
@@ -123,46 +124,46 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
                     if (behavior == BuildBehavior.BuildAssetBundleOnly || buildingSettings.BuildAssetBundles)
                     {
                         Debug.Log("[BUILD] Start Asset Bundle Build...");
-                        // try
-                        // {
-                        //     var filteredItems = AssetBundleSettings.Singleton.Items
-                        //         .Where(x => assetData == null ? x.BuildAssetBundle : assetData.BuildStates[x.AssetBundleName])
-                        //         .GroupBy(x => x.BuildSubPath)
-                        //         .ToDictionary(x => x.Key, x => x.ToList());
-                        //     foreach (var item in filteredItems)
-                        //     {
-                        //         var assetPathDict = item.Value.ToDictionary(
-                        //             x => x.AssetBundleName,
-                        //             x => AssetDatabase.GetAssetPathsFromAssetBundle(x.AssetBundleName));
-                        //
-                        //         if (!Directory.Exists(targetPath + "/" + item.Key))
-                        //         {
-                        //             Directory.CreateDirectory(targetPath + "/" + item.Key);
-                        //         }
-                        //
-                        //         var manifest = BuildPipeline.BuildAssetBundles(targetPath + "/" + item.Key,
-                        //             assetPathDict.Select(x => new AssetBundleBuild { assetBundleName = x.Key, assetNames = x.Value }).ToArray(),
-                        //             BuildAssetBundleOptions.ForceRebuildAssetBundle, buildingSettings.BuildingData.BuildTarget);
-                        //
-                        //         if (manifest == null)
-                        //         {
-                        //             Debug.LogError("[BUILD] Asset Bundle build failed");
-                        //             EditorUtility.DisplayDialog("Asset Bundle Build", "Asset Bundle Build failed for " + string.Join(',', item.Value.Select(x => x.AssetBundleName)), "OK");
-                        //             return;
-                        //         }
-                        //     }
-                        //
-                        //     Debug.Log("[BUILD] Asset Bundles finished");
-                        //
-                        //     if (behavior == BuildBehavior.BuildAssetBundleOnly && buildingSettings.ShowFolder)
-                        //     {
-                        //         Application.OpenURL("file:///" + Environment.CurrentDirectory + "/" + targetPath);
-                        //     }
-                        // }
-                        // finally
-                        // {
-                        //     EditorUtility.ClearProgressBar();
-                        // }
+                        try
+                        {
+                            var filteredItems = AssetBundleSettings.Singleton.Items
+                                //.Where(x => assetData == null ? x.BuildAssetBundle : assetData.BuildStates[x.AssetBundleName])
+                                .GroupBy(x => x.BuildSubPath)
+                                .ToDictionary(x => x.Key, x => x.ToList());
+                            foreach (var item in filteredItems)
+                            {
+                                var assetPathDict = item.Value.ToDictionary(
+                                    x => x.AssetBundleName,
+                                    x => AssetDatabase.GetAssetPathsFromAssetBundle(x.AssetBundleName));
+
+                                if (!Directory.Exists(targetPath + "/" + item.Key))
+                                {
+                                    Directory.CreateDirectory(targetPath + "/" + item.Key);
+                                }
+
+                                var manifest = BuildPipeline.BuildAssetBundles(targetPath + "/" + item.Key,
+                                    assetPathDict.Select(x => new AssetBundleBuild { assetBundleName = x.Key, assetNames = x.Value }).ToArray(),
+                                    BuildAssetBundleOptions.ForceRebuildAssetBundle, buildingSettings.ToBuildTarget());
+
+                                if (manifest == null)
+                                {
+                                    Debug.LogError("[BUILD] Asset Bundle build failed");
+                                    EditorUtility.DisplayDialog("Asset Bundle Build", "Asset Bundle Build failed for " + string.Join(',', item.Value.Select(x => x.AssetBundleName)), "OK");
+                                    return;
+                                }
+                            }
+
+                            Debug.Log("[BUILD] Asset Bundles finished");
+
+                            if (behavior == BuildBehavior.BuildAssetBundleOnly && buildingSettings.ShowFolder)
+                            {
+                                Application.OpenURL("file:///" + Environment.CurrentDirectory + "/" + targetPath);
+                            }
+                        }
+                        finally
+                        {
+                            EditorUtility.ClearProgressBar();
+                        }
                     }
                 }
                 finally
@@ -174,23 +175,23 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
 
         private static string[] KnownScenes => EditorBuildSettings.scenes.Select(x => x.path).ToArray();
 
-        private static BuildOptions CalculateOptions(BuildingFlags buildFlag, BuildBehavior behavior, bool clean, bool showFolder)
+        private static BuildOptions CalculateOptions(BuildingFlags buildFlag, BuildBehavior behavior, bool clean, bool showFolder, BuildingTargetSettings settings)
         {
             var options = BuildOptions.None;
-            // if (buildingType.Compress)
-            // {
-            //     options |= BuildOptions.CompressWithLz4HC;
-            // }
-            //
-            // if (buildingType.AllowDebugging)
-            // {
-            //     options |= BuildOptions.AllowDebugging;
-            // }
-            //
-            // if (buildingType.DevelopmentBuild)
-            // {
-            //     options |= BuildOptions.Development;
-            // }
+            if (settings.Compress)
+            {
+                options |= BuildOptions.CompressWithLz4HC;
+            }
+
+            if (settings.InsertDebuggingSymbols)
+            {
+                options |= BuildOptions.AllowDebugging;
+            }
+
+            if (settings.DevelopmentBuild)
+            {
+                options |= BuildOptions.Development;
+            }
 
             if (buildFlag.HasFlag(BuildingFlags.CodeCoverage))
             {

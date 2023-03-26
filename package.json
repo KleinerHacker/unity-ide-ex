@@ -1,6 +1,6 @@
 {
   "name": "org.pcsoft.ide-ex",
-  "version": "1.2.0",
+  "version": "1.2.0-EA.01",
   "displayName": "IDE Extension for Unity",
   "description": "Extension for Unity for a better IDE.",
   "unity": "2021.3",

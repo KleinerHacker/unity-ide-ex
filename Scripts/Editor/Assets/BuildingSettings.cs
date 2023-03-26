@@ -238,6 +238,10 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
     {
         #region Inspector Data
 
+        [Header("Commons")]
+        private bool compress;
+
+        [Header("IL2CPP")]
         [SerializeField]
         private IL2CPPBackend scriptingBackend = IL2CPPBackend.Debug;
 
@@ -249,17 +253,31 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
         private Il2CppCodeGeneration il2CPPCodeGeneration = Il2CppCodeGeneration.OptimizeSize;
 #endif
 
+        [Header("Defined Symbols")]
         [SerializeField]
         private string[] additionalScriptingDefineSymbols = Array.Empty<string>();
 
         [SerializeField]
         private string[] additionalCompilerArguments = Array.Empty<string>();
 
+        [Header("Debugging")]
+        [SerializeField]
+        private bool developmentBuild;
+
+        [SerializeField]
+        private bool insertDebuggingSymbols;
+
         #endregion
 
         #region Properties
 
         public abstract TargetPlatform Platform { get; }
+
+        public bool Compress
+        {
+            get => compress;
+            internal set => compress = value;
+        }
 
         public IL2CPPBackend ScriptingBackend
         {
@@ -293,6 +311,18 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
             internal set => additionalCompilerArguments = value;
         }
 
+        public bool DevelopmentBuild
+        {
+            get => developmentBuild;
+            internal set => developmentBuild = value;
+        }
+
+        public bool InsertDebuggingSymbols
+        {
+            get => insertDebuggingSymbols;
+            internal set => insertDebuggingSymbols = value;
+        }
+
         #endregion
     }
 
@@ -301,6 +331,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
     {
         #region Inspector Data
 
+        [Header("Mono")]
         [SerializeField]
         private ManagedStrippingLevel strippingLevel = ManagedStrippingLevel.Disabled;
 
@@ -322,6 +353,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
     {
         #region Inspector Data
 
+        [Header("Mono")]
         [SerializeField]
         private ManagedStrippingLevel strippingLevel = ManagedStrippingLevel.Disabled;
 

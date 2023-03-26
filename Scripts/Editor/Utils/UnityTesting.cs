@@ -49,6 +49,14 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
             TestRunnerApi.RegisterCallbacks(AndroidCallbackHandler);
             TestRunnerApi.RegisterCallbacks(IOSCallbackHandler);
             TestRunnerApi.RegisterCallbacks(WebGLCallbackHandler);
+
+            EditorApplication.playModeStateChanged += change =>
+            {
+                if (change == PlayModeStateChange.ExitingPlayMode)
+                {
+                    EditorUtility.ClearProgressBar();
+                }
+            };
         }
 
         private static void InitTest<T>(BuildingGroupSettings<T> groupSettings, UnityBuilding.BuildBehavior? behavior, bool testOnly) where T : BuildingTargetSettings
@@ -160,8 +168,6 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
             private const string FilenameLocalTestSettings = "local-test.settings";
             private static readonly string FileLocalTestSettings = Path.GetTempPath() + Path.DirectorySeparatorChar + typeof(T).Name + "-" + FilenameLocalTestSettings;
 
-            private int max;
-
             public BuildingGroupSettings<T> GroupSettings { get; set; }
             public UnityBuilding.BuildBehavior? Behavior { get; set; }
 
@@ -171,7 +177,6 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
                     return;
 
                 EditorUtility.DisplayProgressBar("Run Tests", "Test is running now", -1f);
-                max = GetTestCount(testsToRun);
             }
 
             public void RunFinished(ITestResultAdaptor result)
@@ -189,7 +194,6 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
                     return;
                 }
 
-                TestRunnerApi.UnregisterCallbacks(this);
                 try
                 {
                     if (!_testOnly)
@@ -206,7 +210,6 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
                 }
                 finally
                 {
-                    Debug.LogError("*** " + _targetGroup + " / " + _target);
                     EditorUserBuildSettings.SwitchActiveBuildTarget(_targetGroup, _target);
                 }
             }
@@ -274,17 +277,6 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
                 };
 
                 File.Delete(FileLocalTestSettings);
-            }
-
-            private static int GetTestCount(ITestAdaptor test)
-            {
-                var parent = test;
-                while (parent.Parent != null)
-                {
-                    parent = parent.Parent;
-                }
-
-                return parent.TestCaseCount;
             }
 
             private static int GetTestIndex(ITestAdaptor test)

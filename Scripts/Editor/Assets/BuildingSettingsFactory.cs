@@ -30,7 +30,10 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                     Settings = new BuildingTargetSettingsWindows
                     {
                         ScriptingBackend = IL2CPPBackend.Debug,
-                        StrippingLevel = ManagedStrippingLevel.Disabled
+                        StrippingLevel = ManagedStrippingLevel.Disabled,
+                        DevelopmentBuild = true,
+                        InsertDebuggingSymbols = true,
+                        Compress = false,
                     }
                 },
                 new BuildingGroupSettings<BuildingTargetSettingsWindows>
@@ -40,7 +43,10 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                     Settings = new BuildingTargetSettingsWindows
                     {
                         ScriptingBackend = IL2CPPBackend.Master,
-                        StrippingLevel = ManagedStrippingLevel.Low
+                        StrippingLevel = ManagedStrippingLevel.Low,
+                        DevelopmentBuild = false,
+                        InsertDebuggingSymbols = false,
+                        Compress = true,
                     }
                 }
             };
@@ -57,7 +63,10 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                     Settings = new BuildingTargetSettingsLinux
                     {
                         ScriptingBackend = IL2CPPBackend.Debug,
-                        StrippingLevel = ManagedStrippingLevel.Disabled
+                        StrippingLevel = ManagedStrippingLevel.Disabled,
+                        DevelopmentBuild = true,
+                        InsertDebuggingSymbols = true,
+                        Compress = false,
                     }
                 },
                 new BuildingGroupSettings<BuildingTargetSettingsLinux>
@@ -67,7 +76,10 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                     Settings = new BuildingTargetSettingsLinux
                     {
                         ScriptingBackend = IL2CPPBackend.Master,
-                        StrippingLevel = ManagedStrippingLevel.Low
+                        StrippingLevel = ManagedStrippingLevel.Low,
+                        DevelopmentBuild = false,
+                        InsertDebuggingSymbols = false,
+                        Compress = true,
                     }
                 }
             };
@@ -84,7 +96,10 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                     Settings = new BuildingTargetSettingsMacOS
                     {
                         ScriptingBackend = IL2CPPBackend.Debug,
-                        StrippingLevel = ManagedStrippingLevel.Disabled
+                        StrippingLevel = ManagedStrippingLevel.Disabled,
+                        DevelopmentBuild = true,
+                        InsertDebuggingSymbols = true,
+                        Compress = false,
                     }
                 },
                 new BuildingGroupSettings<BuildingTargetSettingsMacOS>
@@ -94,7 +109,10 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                     Settings = new BuildingTargetSettingsMacOS
                     {
                         ScriptingBackend = IL2CPPBackend.Master,
-                        StrippingLevel = ManagedStrippingLevel.Low
+                        StrippingLevel = ManagedStrippingLevel.Low,
+                        DevelopmentBuild = false,
+                        InsertDebuggingSymbols = false,
+                        Compress = true,
                     }
                 }
             };
@@ -114,6 +132,9 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                         StrippingLevel = ManagedStrippingLevel.Disabled,
                         TargetArchive = AndroidTargetArchive.ApplicationPackage,
                         TargetAndroidArchitecture = AndroidArchitecture.X86_64,
+                        DevelopmentBuild = true,
+                        InsertDebuggingSymbols = true,
+                        Compress = false,
                     }
                 },
                 new BuildingGroupSettings<BuildingTargetSettingsAndroid>
@@ -126,6 +147,9 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                         StrippingLevel = ManagedStrippingLevel.Low,
                         TargetArchive = AndroidTargetArchive.ApplicationBundle,
                         TargetAndroidArchitecture = AndroidArchitecture.All,
+                        DevelopmentBuild = false,
+                        InsertDebuggingSymbols = false,
+                        Compress = true,
                     }
                 }
             };
@@ -142,7 +166,10 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                     Settings = new BuildingTargetSettingsIOS
                     {
                         ScriptingBackend = IL2CPPBackend.Debug,
-                        StrippingLevel = ManagedStrippingLevel.Disabled
+                        StrippingLevel = ManagedStrippingLevel.Disabled,
+                        DevelopmentBuild = true,
+                        InsertDebuggingSymbols = true,
+                        Compress = false,
                     }
                 },
                 new BuildingGroupSettings<BuildingTargetSettingsIOS>
@@ -152,7 +179,10 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                     Settings = new BuildingTargetSettingsIOS
                     {
                         ScriptingBackend = IL2CPPBackend.Master,
-                        StrippingLevel = ManagedStrippingLevel.Low
+                        StrippingLevel = ManagedStrippingLevel.Low,
+                        DevelopmentBuild = false,
+                        InsertDebuggingSymbols = false,
+                        Compress = true,
                     }
                 }
             };
@@ -168,7 +198,10 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                     Path = "Debug",
                     Settings = new BuildingTargetSettingsWebGL
                     {
-                        ScriptingBackend = IL2CPPBackend.Debug
+                        ScriptingBackend = IL2CPPBackend.Debug,
+                        DevelopmentBuild = true,
+                        InsertDebuggingSymbols = true,
+                        Compress = false,
                     }
                 },
                 new BuildingGroupSettings<BuildingTargetSettingsWebGL>
@@ -177,7 +210,10 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                     Path = "Release",
                     Settings = new BuildingTargetSettingsWebGL
                     {
-                        ScriptingBackend = IL2CPPBackend.Master
+                        ScriptingBackend = IL2CPPBackend.Master,
+                        DevelopmentBuild = false,
+                        InsertDebuggingSymbols = false,
+                        Compress = true,
                     }
                 }
             };

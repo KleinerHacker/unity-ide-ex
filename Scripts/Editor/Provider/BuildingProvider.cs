@@ -94,7 +94,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
                     LayoutLinux();
                     break;
                 case 2:
-                    LayoutIOS();
+                    LayoutMacOS();
                     break;
                 case 3:
                     LayoutAndroid();
@@ -126,44 +126,32 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Provider
 
         private void LayoutWindows()
         {
-            var strings = _windowsProperties.ToProperties().Select(x => x.GetRelativeString("name")).ToArray();
-            _windowsBuildingGroup = EditorGUILayout.Popup(_windowsBuildingGroup, strings);
-            EditorGUILayout.PropertyField(_windowsProperties.GetArrayElementAtIndex(_windowsBuildingGroup), GUIContent.none, true);
+            EditorGUILayout.PropertyField(_windowsProperties, new GUIContent("Settings"), true);
         }
 
         private void LayoutLinux()
         {
-            var strings = _linuxProperties.ToProperties().Select(x => x.GetRelativeString("name")).ToArray();
-            _linuxBuildingGroup = EditorGUILayout.Popup(_linuxBuildingGroup, strings);
-            EditorGUILayout.PropertyField(_linuxProperties.GetArrayElementAtIndex(_linuxBuildingGroup), GUIContent.none, true);
+            EditorGUILayout.PropertyField(_linuxProperties, new GUIContent("Settings"), true);
         }
 
         private void LayoutMacOS()
         {
-            var strings = _macOSProperties.ToProperties().Select(x => x.GetRelativeString("name")).ToArray();
-            _macOSBuildingGroup = EditorGUILayout.Popup(_macOSBuildingGroup, strings);
-            EditorGUILayout.PropertyField(_macOSProperties.GetArrayElementAtIndex(_macOSBuildingGroup), GUIContent.none, true);
+            EditorGUILayout.PropertyField(_macOSProperties, new GUIContent("Settings"), true);
         }
 
         private void LayoutAndroid()
         {
-            var strings = _androidProperties.ToProperties().Select(x => x.GetRelativeString("name")).ToArray();
-            _androidBuildingGroup = EditorGUILayout.Popup(_androidBuildingGroup, strings);
-            EditorGUILayout.PropertyField(_androidProperties.GetArrayElementAtIndex(_androidBuildingGroup), GUIContent.none, true);
+            EditorGUILayout.PropertyField(_androidProperties, new GUIContent("Settings"), true);
         }
 
         private void LayoutIOS()
         {
-            var strings = _iosProperties.ToProperties().Select(x => x.GetRelativeString("name")).ToArray();
-            _iosBuildingGroup = EditorGUILayout.Popup(_iosBuildingGroup, strings);
-            EditorGUILayout.PropertyField(_iosProperties.GetArrayElementAtIndex(_iosBuildingGroup), GUIContent.none, true);
+            EditorGUILayout.PropertyField(_iosProperties, new GUIContent("Settings"), true);
         }
 
         private void LayoutWebGL()
         {
-            var strings = _webGLProperties.ToProperties().Select(x => x.GetRelativeString("name")).ToArray();
-            _webGLBuildingGroup = EditorGUILayout.Popup(_webGLBuildingGroup, strings);
-            EditorGUILayout.PropertyField(_webGLProperties.GetArrayElementAtIndex(_webGLBuildingGroup), GUIContent.none, true);
+            EditorGUILayout.PropertyField(_webGLProperties, new GUIContent("Settings"), true);
         }
     }
 }
