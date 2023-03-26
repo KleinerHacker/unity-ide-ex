@@ -1,177 +1,282 @@
+using System;
 using System.IO;
+using System.Text;
+using Newtonsoft.Json;
 using UnityEditor;
 using UnityEditor.TestTools.TestRunner.Api;
 using UnityEngine;
 using UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets;
+using UnityIdeEx.Editor.ide_ex.Scripts.Editor.Types;
+using UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils.Extensions;
 
 namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
 {
     [InitializeOnLoad]
     internal static class UnityTesting
     {
-        private const string GroupFileName = "group.dat";
-        private const string BaseFileName = "base.dat";
-        
-        private static TestRunnerApi _testRunnerApi;
-        private static readonly CallbackHandler _callbackHandler = new CallbackHandler();
+        private const string FilenameGlobalTestSettings = "global-test.settings";
+        private static readonly string FileGlobalTestSettings = Path.GetTempPath() + Path.DirectorySeparatorChar + FilenameGlobalTestSettings;
+
+        private static readonly TestRunnerApi TestRunnerApi;
+        private static readonly CallbackHandler<BuildingTargetSettingsWindows> WindowsCallbackHandler = new();
+        private static readonly CallbackHandler<BuildingTargetSettingsLinux> LinuxCallbackHandler = new();
+        private static readonly CallbackHandler<BuildingTargetSettingsMacOS> MacOSCallbackHandler = new();
+        private static readonly CallbackHandler<BuildingTargetSettingsAndroid> AndroidCallbackHandler = new();
+        private static readonly CallbackHandler<BuildingTargetSettingsIOS> IOSCallbackHandler = new();
+        private static readonly CallbackHandler<BuildingTargetSettingsWebGL> WebGLCallbackHandler = new();
+
+        private static TargetPlatform _currentTargetPlatform;
+        private static bool _testOnly;
+        private static BuildTargetGroup _targetGroup;
+        private static BuildTarget _target;
 
         static UnityTesting()
         {
-            InitTest();
+            //Load data after reloading assembly
+            LoadData();
+
+            WindowsCallbackHandler.LoadData();
+            LinuxCallbackHandler.LoadData();
+            MacOSCallbackHandler.LoadData();
+            AndroidCallbackHandler.LoadData();
+            IOSCallbackHandler.LoadData();
+            WebGLCallbackHandler.LoadData();
+
+            TestRunnerApi = ScriptableObject.CreateInstance<TestRunnerApi>();
+            TestRunnerApi.RegisterCallbacks(WindowsCallbackHandler);
+            TestRunnerApi.RegisterCallbacks(LinuxCallbackHandler);
+            TestRunnerApi.RegisterCallbacks(MacOSCallbackHandler);
+            TestRunnerApi.RegisterCallbacks(AndroidCallbackHandler);
+            TestRunnerApi.RegisterCallbacks(IOSCallbackHandler);
+            TestRunnerApi.RegisterCallbacks(WebGLCallbackHandler);
+
+            EditorApplication.playModeStateChanged += change =>
+            {
+                if (change == PlayModeStateChange.ExitingPlayMode)
+                {
+                    EditorUtility.ClearProgressBar();
+                }
+            };
         }
 
-        private static void InitTest()
+        private static void InitTest<T>(BuildingGroupSettings<T> groupSettings, UnityBuilding.BuildBehavior? behavior, bool testOnly) where T : BuildingTargetSettings
         {
-            if (_testRunnerApi == null)
+            _currentTargetPlatform = groupSettings.Settings.Platform;
+            _testOnly = testOnly;
+
+            _targetGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
+            _target = EditorUserBuildSettings.activeBuildTarget;
+            EditorUserBuildSettings.SwitchActiveBuildTarget(BuildingSettings.Singleton.ToBuildTargetGroup(), BuildingSettings.Singleton.ToBuildTarget());
+
+            switch (groupSettings.Settings.Platform)
             {
-                _testRunnerApi = ScriptableObject.CreateInstance<TestRunnerApi>();
-                _testRunnerApi.RegisterCallbacks(_callbackHandler);
+                case TargetPlatform.Windows:
+                    WindowsCallbackHandler.Behavior = behavior;
+                    WindowsCallbackHandler.GroupSettings = ChangeType<BuildingGroupSettings<BuildingTargetSettingsWindows>>(groupSettings);
+                    WindowsCallbackHandler.StoreData();
+                    break;
+                case TargetPlatform.Linux:
+                    LinuxCallbackHandler.Behavior = behavior;
+                    LinuxCallbackHandler.GroupSettings = ChangeType<BuildingGroupSettings<BuildingTargetSettingsLinux>>(groupSettings);
+                    LinuxCallbackHandler.StoreData();
+                    break;
+                case TargetPlatform.MacOS:
+                    MacOSCallbackHandler.Behavior = behavior;
+                    MacOSCallbackHandler.GroupSettings = ChangeType<BuildingGroupSettings<BuildingTargetSettingsMacOS>>(groupSettings);
+                    MacOSCallbackHandler.StoreData();
+                    break;
+                case TargetPlatform.Android:
+                    AndroidCallbackHandler.Behavior = behavior;
+                    AndroidCallbackHandler.GroupSettings = ChangeType<BuildingGroupSettings<BuildingTargetSettingsAndroid>>(groupSettings);
+                    AndroidCallbackHandler.StoreData();
+                    break;
+                case TargetPlatform.IOS:
+                    IOSCallbackHandler.Behavior = behavior;
+                    IOSCallbackHandler.GroupSettings = ChangeType<BuildingGroupSettings<BuildingTargetSettingsIOS>>(groupSettings);
+                    IOSCallbackHandler.StoreData();
+                    break;
+                case TargetPlatform.WebGL:
+                    WebGLCallbackHandler.Behavior = behavior;
+                    WebGLCallbackHandler.GroupSettings = ChangeType<BuildingGroupSettings<BuildingTargetSettingsWebGL>>(groupSettings);
+                    WebGLCallbackHandler.StoreData();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            //Store data as pre-step of reload of assembly
+            StoreData();
+
+            TX ChangeType<TX>(object value)
+            {
+                var convertedValue = (TX)Convert.ChangeType(value, typeof(TX));
+                if (convertedValue == null && value != null)
+                    throw new InvalidOperationException("Conversion failed from type " + value.GetType().FullName + " to " + typeof(TX).FullName);
+
+                return convertedValue;
             }
         }
 
-        public static void RunTests(BuildingGroup @group)
+        public static void RunTests<T>(BuildingGroupSettings<T> data, bool testOnly) where T : BuildingTargetSettings
         {
-            Debug.Log("Start tests");
+            Debug.Log("[TEST-RUN] Start tests");
 
-            StoreGroup(@group);
-            InitTest();
-
-            _testRunnerApi.Execute(new ExecutionSettings(new Filter { testMode = TestMode.PlayMode }));
-        }
-        
-        public static void RunTests(BuildingData data, UnityBuilding.BuildBehavior? behavior = null)
-        {
-            Debug.Log("Start tests");
-
-            StoreBase(behavior, data);
-            InitTest();
-
-            _testRunnerApi.Execute(new ExecutionSettings(new Filter { testMode = TestMode.PlayMode }));
+            InitTest(data, null, testOnly);
+            TestRunnerApi.Execute(new ExecutionSettings(new Filter { testMode = TestMode.PlayMode }));
         }
 
-        private static void StoreGroup(BuildingGroup @group)
+        public static void RunTests<T>(BuildingGroupSettings<T> data, UnityBuilding.BuildBehavior? behavior, bool testOnly) where T : BuildingTargetSettings
         {
-            var fileName = Path.GetTempPath() + "/" + GroupFileName;
-            using var stream = new FileStream(fileName, FileMode.Create);
-            using var writer = new StreamWriter(stream);
-            writer.WriteLine(JsonUtility.ToJson(@group));
+            Debug.Log("[TEST-RUN] Start tests");
+
+            InitTest(data, behavior, testOnly);
+            TestRunnerApi.Execute(new ExecutionSettings(new Filter { testMode = TestMode.PlayMode }));
         }
 
-        private static bool LoadGroup(out BuildingGroup @group)
+        private static void StoreData()
         {
-            @group = null;
-            var fileName = Path.GetTempPath() + "/" + GroupFileName;
-            
-            if (!File.Exists(fileName))
-                return false;
-
-            try
-            {
-                using var stream = new FileStream(fileName, FileMode.Open);
-                using var reader = new StreamReader(stream);
-                @group = JsonUtility.FromJson<BuildingGroup>(reader.ReadLine());
-            }
-            finally
-            {
-                File.Delete(fileName);
-            }
-
-            return true;
+            File.WriteAllLines(
+                FileGlobalTestSettings,
+                new[]
+                {
+                    _currentTargetPlatform.ToString(),
+                    _testOnly.ToString(),
+                    _targetGroup.ToString(),
+                    _target.ToString()
+                },
+                Encoding.UTF8
+            );
         }
 
-        private static void StoreBase(UnityBuilding.BuildBehavior? behavior, BuildingData overwriteData)
+        private static void LoadData()
         {
-            var fileName = Path.GetTempPath() + "/" + BaseFileName;
-            using var stream = new FileStream(fileName, FileMode.Create);
-            using var writer = new StreamWriter(stream);
-            writer.WriteLine(behavior == null ? "<null>" : JsonUtility.ToJson(behavior.Value));
-            writer.WriteLine(JsonUtility.ToJson(overwriteData));
+            if (!File.Exists(FileGlobalTestSettings))
+                return;
+
+            var lines = File.ReadAllLines(FileGlobalTestSettings, Encoding.UTF8);
+            if (lines.Length != 4)
+                throw new InvalidOperationException("lines count must be 4");
+
+            _currentTargetPlatform = Enum.Parse<TargetPlatform>(lines[0]);
+            _testOnly = bool.Parse(lines[1]);
+            _targetGroup = Enum.Parse<BuildTargetGroup>(lines[2]);
+            _target = Enum.Parse<BuildTarget>(lines[3]);
         }
 
-        private static bool LoadBase(out UnityBuilding.BuildBehavior? behavior, out BuildingData overwriteData)
+        private sealed class CallbackHandler<T> : ICallbacks where T : BuildingTargetSettings
         {
-            behavior = UnityBuilding.BuildBehavior.BuildOnly;
-            overwriteData = null;
-            
-            var fileName = Path.GetTempPath() + "/" + BaseFileName;
-            
-            if (!File.Exists(fileName))
-                return false;
+            private const string FilenameLocalTestSettings = "local-test.settings";
+            private static readonly string FileLocalTestSettings = Path.GetTempPath() + Path.DirectorySeparatorChar + typeof(T).Name + "-" + FilenameLocalTestSettings;
 
-            try
-            {
-                using var stream = new FileStream(fileName, FileMode.Open);
-                using var reader = new StreamReader(stream);
-                var behaviorStr = reader.ReadLine();
-                behavior = behaviorStr == "<null>" ? null : JsonUtility.FromJson<UnityBuilding.BuildBehavior>(behaviorStr);
-                overwriteData = JsonUtility.FromJson<BuildingData>(reader.ReadLine());
-            }
-            finally
-            {
-                File.Delete(fileName);
-            }
+            public BuildingGroupSettings<T> GroupSettings { get; set; }
+            public UnityBuilding.BuildBehavior? Behavior { get; set; }
 
-            return true;
-        }
-
-        private sealed class CallbackHandler : ICallbacks
-        {
-            private int max;
-            
             public void RunStarted(ITestAdaptor testsToRun)
             {
+                if (GroupSettings?.Settings.Platform != _currentTargetPlatform)
+                    return;
+
                 EditorUtility.DisplayProgressBar("Run Tests", "Test is running now", -1f);
-                max = GetTestCount(testsToRun);
             }
 
             public void RunFinished(ITestResultAdaptor result)
             {
+                if (GroupSettings?.Settings.Platform != _currentTargetPlatform)
+                    return;
+
                 EditorUtility.ClearProgressBar();
 
-                Debug.Log("Finished test with success: " + result.PassCount + ", skipped: " + result.SkipCount + ", failed: " + result.FailCount);
+                Debug.Log("[TEST-RUN] Finished test run with success: " + result.PassCount + ", skipped: " + result.SkipCount + ", failed: " + result.FailCount);
                 if (result.TestStatus == TestStatus.Failed)
                 {
                     EditorUtility.DisplayDialog("Test failures", "There are test failures: " + result.TestStatus, "OK");
+                    EditorUserBuildSettings.SwitchActiveBuildTarget(_targetGroup, _target);
                     return;
                 }
 
-                if (LoadGroup(out var @group))
+                try
                 {
-                    UnityBuilding.Build(@group, false);
+                    if (!_testOnly)
+                    {
+                        if (Behavior.HasValue)
+                        {
+                            UnityBuilding.Build(Behavior.Value, GroupSettings, false, false);
+                        }
+                        else
+                        {
+                            UnityBuilding.Build(GroupSettings, false);
+                        }
+                    }
                 }
-                else if (LoadBase(out var behavior, out var overwriteData))
+                finally
                 {
-                    if (behavior == null)
-                        return;
-                    
-                    UnityBuilding.Build(behavior.Value, overwriteData, runTest:false);
-                }
-                else
-                {
-                    Debug.LogError("Unable to find base or group file for build execution!");
+                    EditorUserBuildSettings.SwitchActiveBuildTarget(_targetGroup, _target);
                 }
             }
 
             public void TestStarted(ITestAdaptor test)
             {
+                if (GroupSettings?.Settings.Platform != _currentTargetPlatform)
+                    return;
+
                 var index = GetTestIndex(test);
                 //EditorUtility.DisplayProgressBar("Run Tests", "Test is running now: " + test.Name + " (" + index + " / " + max + ")", (float) index / (float)max);
             }
 
             public void TestFinished(ITestResultAdaptor result)
             {
-                EditorUtility.ClearProgressBar();
+                if (GroupSettings?.Settings.Platform != _currentTargetPlatform)
+                    return;
+
+                //Debug.Log("[TEST-RUN] Finished test with success: " + result.PassCount + ", skipped: " + result.SkipCount + ", failed: " + result.FailCount);
+                //EditorUtility.ClearProgressBar();
             }
 
-            private static int GetTestCount(ITestAdaptor test)
+            /// <summary>
+            /// Store data as pre-step of reloading assembly
+            /// </summary>
+            internal void StoreData()
             {
-                var parent = test;
-                while (parent.Parent != null)
-                {
-                    parent = parent.Parent;
-                }
+                var json = JsonConvert.SerializeObject(GroupSettings.Settings);
+                File.WriteAllLines(
+                    FileLocalTestSettings,
+                    new[]
+                    {
+                        Behavior.HasValue ? Behavior.Value.ToString() : "",
+                        GroupSettings.Name,
+                        GroupSettings.Path,
+                        json
+                    },
+                    Encoding.UTF8
+                );
+            }
 
-                return parent.TestCaseCount;
+            /// <summary>
+            /// Load data after reload assembly
+            /// </summary>
+            internal void LoadData()
+            {
+                if (!File.Exists(FileLocalTestSettings))
+                    return;
+
+                var lines = File.ReadAllLines(FileLocalTestSettings, Encoding.UTF8);
+                if (lines.Length != 4)
+                    throw new InvalidOperationException("lines count must be 2");
+
+                Behavior = string.IsNullOrWhiteSpace(lines[0]) ? null : Enum.Parse<UnityBuilding.BuildBehavior>(lines[0]);
+                var name = lines[1];
+                var path = lines[2];
+                var data = lines[3];
+                var settings = JsonConvert.DeserializeObject<T>(data);
+
+                GroupSettings = new BuildingGroupSettings<T>
+                {
+                    Name = name,
+                    Path = path,
+                    Settings = settings
+                };
+
+                File.Delete(FileLocalTestSettings);
             }
 
             private static int GetTestIndex(ITestAdaptor test)
@@ -191,7 +296,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
                 {
                     if (root.UniqueName == test.UniqueName)
                         return true;
-                    
+
                     counter++;
                     foreach (var child in root.Children)
                     {
