@@ -7,6 +7,7 @@ using UnityEditor.TestTools.TestRunner.Api;
 using UnityEngine;
 using UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets;
 using UnityIdeEx.Editor.ide_ex.Scripts.Editor.Types;
+using UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils.Extensions;
 
 namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
 {
@@ -26,6 +27,8 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
 
         private static TargetPlatform _currentTargetPlatform;
         private static bool _testOnly;
+        private static BuildTargetGroup _targetGroup;
+        private static BuildTarget _target;
 
         static UnityTesting()
         {
@@ -52,6 +55,10 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
         {
             _currentTargetPlatform = groupSettings.Settings.Platform;
             _testOnly = testOnly;
+
+            _targetGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
+            _target = EditorUserBuildSettings.activeBuildTarget;
+            EditorUserBuildSettings.SwitchActiveBuildTarget(BuildingSettings.Singleton.ToBuildTargetGroup(), BuildingSettings.Singleton.ToBuildTarget());
 
             switch (groupSettings.Settings.Platform)
             {
@@ -125,7 +132,9 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
                 new[]
                 {
                     _currentTargetPlatform.ToString(),
-                    _testOnly.ToString()
+                    _testOnly.ToString(),
+                    _targetGroup.ToString(),
+                    _target.ToString()
                 },
                 Encoding.UTF8
             );
@@ -137,11 +146,13 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
                 return;
 
             var lines = File.ReadAllLines(FileGlobalTestSettings, Encoding.UTF8);
-            if (lines.Length != 2)
-                throw new InvalidOperationException("lines count must be 2");
+            if (lines.Length != 4)
+                throw new InvalidOperationException("lines count must be 4");
 
             _currentTargetPlatform = Enum.Parse<TargetPlatform>(lines[0]);
             _testOnly = bool.Parse(lines[1]);
+            _targetGroup = Enum.Parse<BuildTargetGroup>(lines[2]);
+            _target = Enum.Parse<BuildTarget>(lines[3]);
         }
 
         private sealed class CallbackHandler<T> : ICallbacks where T : BuildingTargetSettings
@@ -174,20 +185,29 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
                 if (result.TestStatus == TestStatus.Failed)
                 {
                     EditorUtility.DisplayDialog("Test failures", "There are test failures: " + result.TestStatus, "OK");
+                    EditorUserBuildSettings.SwitchActiveBuildTarget(_targetGroup, _target);
                     return;
                 }
 
                 TestRunnerApi.UnregisterCallbacks(this);
-                if (!_testOnly)
+                try
                 {
-                    if (Behavior.HasValue)
+                    if (!_testOnly)
                     {
-                        UnityBuilding.Build(Behavior.Value, GroupSettings, false);
+                        if (Behavior.HasValue)
+                        {
+                            UnityBuilding.Build(Behavior.Value, GroupSettings, false, false);
+                        }
+                        else
+                        {
+                            UnityBuilding.Build(GroupSettings, false);
+                        }
                     }
-                    else
-                    {
-                        UnityBuilding.Build(GroupSettings, false);
-                    }
+                }
+                finally
+                {
+                    Debug.LogError("*** " + _targetGroup + " / " + _target);
+                    EditorUserBuildSettings.SwitchActiveBuildTarget(_targetGroup, _target);
                 }
             }
 
@@ -237,6 +257,9 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
                     return;
 
                 var lines = File.ReadAllLines(FileLocalTestSettings, Encoding.UTF8);
+                if (lines.Length != 4)
+                    throw new InvalidOperationException("lines count must be 2");
+
                 Behavior = string.IsNullOrWhiteSpace(lines[0]) ? null : Enum.Parse<UnityBuilding.BuildBehavior>(lines[0]);
                 var name = lines[1];
                 var path = lines[2];

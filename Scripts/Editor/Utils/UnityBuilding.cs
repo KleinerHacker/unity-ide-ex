@@ -27,7 +27,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
             }
         }
 
-        public static void Build<T>(BuildBehavior behavior, BuildingGroupSettings<T> data, bool runTest = true) where T : BuildingTargetSettings
+        public static void Build<T>(BuildBehavior behavior, BuildingGroupSettings<T> data, bool runTest = true, bool switchTarget = true) where T : BuildingTargetSettings
         {
             var buildingSettings = BuildingSettings.Singleton;
             if (runTest && buildingSettings.RunTests)
@@ -36,7 +36,24 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
             }
             else
             {
-                RunBuild(data);
+                var oldBuildTargetGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
+                var oldBuildTarget = EditorUserBuildSettings.activeBuildTarget;
+                if (switchTarget)
+                {
+                    EditorUserBuildSettings.SwitchActiveBuildTarget(buildingSettings.ToBuildTargetGroup(), buildingSettings.ToBuildTarget());
+                }
+
+                try
+                {
+                    RunBuild(data);
+                }
+                finally
+                {
+                    if (switchTarget)
+                    {
+                        EditorUserBuildSettings.SwitchActiveBuildTarget(oldBuildTargetGroup, oldBuildTarget);
+                    }
+                }
             }
 
             void RunBuild(BuildingGroupSettings<T> groupSettings)
