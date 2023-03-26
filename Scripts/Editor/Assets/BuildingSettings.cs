@@ -1,5 +1,6 @@
 using System;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEditorEx.Runtime.editor_ex.Scripts.Runtime.Assets;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -48,7 +49,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
         private ScriptingBackend selectedScriptingBackend = ScriptingBackend.Mono;
 
         [SerializeField]
-        private int selectedGroup = 0;
+        private int selectedGroup;
 
         [SerializeField]
         private BuildingGroupSettings<BuildingTargetSettingsWindows>[] windows = Array.Empty<BuildingGroupSettings<BuildingTargetSettingsWindows>>();
@@ -182,7 +183,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
     }
 
     [Serializable]
-    public sealed class BuildingGroupSettings<T> where T : BuildingTargetSettings
+    public abstract class BuildingGroupSettings
     {
         #region Inspector Data
 
@@ -190,7 +191,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
         private string name;
 
         [SerializeField]
-        private T settings;
+        private string path;
 
         #endregion
 
@@ -201,6 +202,27 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
             get => name;
             internal set => name = value;
         }
+
+        public string Path
+        {
+            get => path;
+            internal set => path = value;
+        }
+
+        #endregion
+    }
+
+    [Serializable]
+    public sealed class BuildingGroupSettings<T> : BuildingGroupSettings where T : BuildingTargetSettings
+    {
+        #region Inspector Data
+
+        [SerializeField]
+        private T settings;
+
+        #endregion
+
+        #region Properties
 
         public T Settings
         {
@@ -220,6 +242,14 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
         private IL2CPPBackend scriptingBackend = IL2CPPBackend.Debug;
 
         [SerializeField]
+        private bool il2CPPIncrementBuild;
+
+#if UNITY_2021_2_OR_NEWER
+        [SerializeField]
+        private Il2CppCodeGeneration il2CPPCodeGeneration = Il2CppCodeGeneration.OptimizeSize;
+#endif
+
+        [SerializeField]
         private string[] additionalScriptingDefineSymbols = Array.Empty<string>();
 
         [SerializeField]
@@ -236,6 +266,20 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
             get => scriptingBackend;
             internal set => scriptingBackend = value;
         }
+
+        public bool IL2CPPIncrementBuild
+        {
+            get => il2CPPIncrementBuild;
+            internal set => il2CPPIncrementBuild = value;
+        }
+
+#if UNITY_2021_2_OR_NEWER
+        public Il2CppCodeGeneration IL2CPPCodeGeneration
+        {
+            get => il2CPPCodeGeneration;
+            internal set => il2CPPCodeGeneration = value;
+        }
+#endif
 
         public string[] AdditionalScriptingDefineSymbols
         {

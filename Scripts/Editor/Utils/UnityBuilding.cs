@@ -13,85 +13,33 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
     internal static class UnityBuilding
     {
         private const string TargetKey = "${TARGET}";
-        internal const string DefaultTargetPath = "Builds/" + TargetKey;
+        private const string DefaultTargetPath = "Builds/" + TargetKey;
 
         public static void Build<T>(BuildingGroupSettings<T> @group, bool runTest = true) where T : BuildingTargetSettings
         {
             if (runTest && BuildingSettings.Singleton.RunTests)
             {
-                UnityTesting.RunTests(@group);
+                UnityTesting.RunTests(@group, false);
             }
             else
             {
-                RunBuild();
-            }
-
-            void RunBuild()
-            {
-                // foreach (var item in @group.Items)
-                // {
-                //     Build(BuildBehavior.BuildOnly, item, runTest:false);
-                // }
+                Build(BuildBehavior.BuildOnly, @group, runTest: false);
             }
         }
 
-        public static void Build(BuildBehavior behavior, bool runTest = true)
+        public static void Build<T>(BuildBehavior behavior, BuildingGroupSettings<T> data, bool runTest = true) where T : BuildingTargetSettings
         {
             var buildingSettings = BuildingSettings.Singleton;
             if (runTest && buildingSettings.RunTests)
             {
-                switch (buildingSettings.SelectedTargetPlatform)
-                {
-                    case TargetPlatform.Windows:
-                        UnityTesting.RunTests(buildingSettings.Windows[buildingSettings.SelectedGroup], behavior);
-                        break;
-                    case TargetPlatform.Linux:
-                        UnityTesting.RunTests(buildingSettings.Linux[buildingSettings.SelectedGroup], behavior);
-                        break;
-                    case TargetPlatform.MacOS:
-                        UnityTesting.RunTests(buildingSettings.MacOS[buildingSettings.SelectedGroup], behavior);
-                        break;
-                    case TargetPlatform.Android:
-                        UnityTesting.RunTests(buildingSettings.Android[buildingSettings.SelectedGroup], behavior);
-                        break;
-                    case TargetPlatform.IOS:
-                        UnityTesting.RunTests(buildingSettings.IOS[buildingSettings.SelectedGroup], behavior);
-                        break;
-                    case TargetPlatform.WebGL:
-                        UnityTesting.RunTests(buildingSettings.WebGL[buildingSettings.SelectedGroup], behavior);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
+                UnityTesting.RunTests(data, behavior, false);
             }
             else
             {
-                switch (buildingSettings.SelectedTargetPlatform)
-                {
-                    case TargetPlatform.Windows:
-                        RunBuild(buildingSettings.Windows[buildingSettings.SelectedGroup]);
-                        break;
-                    case TargetPlatform.Linux:
-                        RunBuild(buildingSettings.Linux[buildingSettings.SelectedGroup]);
-                        break;
-                    case TargetPlatform.MacOS:
-                        RunBuild(buildingSettings.MacOS[buildingSettings.SelectedGroup]);
-                        break;
-                    case TargetPlatform.Android:
-                        RunBuild(buildingSettings.Android[buildingSettings.SelectedGroup]);
-                        break;
-                    case TargetPlatform.IOS:
-                        RunBuild(buildingSettings.IOS[buildingSettings.SelectedGroup]);
-                        break;
-                    case TargetPlatform.WebGL:
-                        RunBuild(buildingSettings.WebGL[buildingSettings.SelectedGroup]);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
+                RunBuild(data);
             }
 
-            void RunBuild<T>(BuildingGroupSettings<T> groupSettings) where T : BuildingTargetSettings
+            void RunBuild(BuildingGroupSettings<T> groupSettings)
             {
                 var buildTargetGroup = BuildPipeline.GetBuildTargetGroup(buildingSettings.ToBuildTarget());
                 var cppCompilerConfiguration = buildingSettings.SelectedScriptingBackend == ScriptingBackend.IL2CPP
@@ -101,10 +49,10 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
                 {
                     PlayerSettings.SetScriptingBackend(buildTargetGroup, ScriptingImplementation.IL2CPP);
                     PlayerSettings.SetIl2CppCompilerConfiguration(buildTargetGroup, cppCompilerConfiguration.Value);
-//                     PlayerSettings.SetIncrementalIl2CppBuild(buildTargetGroup, buildingType.CppIncrementalBuild);
-// #if UNITY_2021_2_OR_NEWER
-//                     EditorUserBuildSettings.il2CppCodeGeneration = buildingType.CppCodeGeneration;
-// #endif
+                    PlayerSettings.SetIncrementalIl2CppBuild(buildTargetGroup, groupSettings.Settings.IL2CPPIncrementBuild);
+#if UNITY_2021_2_OR_NEWER
+                    EditorUserBuildSettings.il2CppCodeGeneration = groupSettings.Settings.IL2CPPCodeGeneration;
+#endif
                 }
                 else
                 {
@@ -117,7 +65,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
                     EditorUserBuildSettings.buildAppBundle = androidSettings.Settings.TargetArchive == AndroidTargetArchive.ApplicationBundle;
                 }
 
-                var targetPath = DefaultTargetPath.Replace(TargetKey, buildingSettings.SelectedTargetPlatform.ToString()) + "/" + groupSettings.Name;
+                var targetPath = DefaultTargetPath.Replace(TargetKey, buildingSettings.SelectedTargetPlatform.ToString()) + "/" + groupSettings.Path;
                 var appName = buildingSettings.AppName + GetExtension(buildingSettings.SelectedTargetPlatform);
                 var options = new BuildPlayerOptions
                 {

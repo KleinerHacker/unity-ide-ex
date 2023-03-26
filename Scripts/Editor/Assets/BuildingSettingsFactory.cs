@@ -26,6 +26,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                 new BuildingGroupSettings<BuildingTargetSettingsWindows>
                 {
                     Name = "Debug",
+                    Path = "Debug",
                     Settings = new BuildingTargetSettingsWindows
                     {
                         ScriptingBackend = IL2CPPBackend.Debug,
@@ -35,6 +36,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                 new BuildingGroupSettings<BuildingTargetSettingsWindows>
                 {
                     Name = "Release",
+                    Path = "Release",
                     Settings = new BuildingTargetSettingsWindows
                     {
                         ScriptingBackend = IL2CPPBackend.Master,
@@ -51,6 +53,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                 new BuildingGroupSettings<BuildingTargetSettingsLinux>
                 {
                     Name = "Debug",
+                    Path = "Debug",
                     Settings = new BuildingTargetSettingsLinux
                     {
                         ScriptingBackend = IL2CPPBackend.Debug,
@@ -60,6 +63,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                 new BuildingGroupSettings<BuildingTargetSettingsLinux>
                 {
                     Name = "Release",
+                    Path = "Release",
                     Settings = new BuildingTargetSettingsLinux
                     {
                         ScriptingBackend = IL2CPPBackend.Master,
@@ -76,6 +80,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                 new BuildingGroupSettings<BuildingTargetSettingsMacOS>
                 {
                     Name = "Debug",
+                    Path = "Debug",
                     Settings = new BuildingTargetSettingsMacOS
                     {
                         ScriptingBackend = IL2CPPBackend.Debug,
@@ -85,6 +90,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                 new BuildingGroupSettings<BuildingTargetSettingsMacOS>
                 {
                     Name = "Release",
+                    Path = "Release",
                     Settings = new BuildingTargetSettingsMacOS
                     {
                         ScriptingBackend = IL2CPPBackend.Master,
@@ -101,6 +107,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                 new BuildingGroupSettings<BuildingTargetSettingsAndroid>
                 {
                     Name = "Debug (*.apk)",
+                    Path = "Debug",
                     Settings = new BuildingTargetSettingsAndroid
                     {
                         ScriptingBackend = IL2CPPBackend.Debug,
@@ -112,6 +119,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                 new BuildingGroupSettings<BuildingTargetSettingsAndroid>
                 {
                     Name = "Release (*.aab)",
+                    Path = "Release",
                     Settings = new BuildingTargetSettingsAndroid
                     {
                         ScriptingBackend = IL2CPPBackend.Master,
@@ -130,6 +138,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                 new BuildingGroupSettings<BuildingTargetSettingsIOS>
                 {
                     Name = "Debug",
+                    Path = "Debug",
                     Settings = new BuildingTargetSettingsIOS
                     {
                         ScriptingBackend = IL2CPPBackend.Debug,
@@ -139,6 +148,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                 new BuildingGroupSettings<BuildingTargetSettingsIOS>
                 {
                     Name = "Release",
+                    Path = "Release",
                     Settings = new BuildingTargetSettingsIOS
                     {
                         ScriptingBackend = IL2CPPBackend.Master,
@@ -155,6 +165,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                 new BuildingGroupSettings<BuildingTargetSettingsWebGL>
                 {
                     Name = "Debug",
+                    Path = "Debug",
                     Settings = new BuildingTargetSettingsWebGL
                     {
                         ScriptingBackend = IL2CPPBackend.Debug
@@ -163,6 +174,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
                 new BuildingGroupSettings<BuildingTargetSettingsWebGL>
                 {
                     Name = "Release",
+                    Path = "Release",
                     Settings = new BuildingTargetSettingsWebGL
                     {
                         ScriptingBackend = IL2CPPBackend.Master
