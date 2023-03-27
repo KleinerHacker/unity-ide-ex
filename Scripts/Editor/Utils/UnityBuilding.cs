@@ -58,7 +58,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
 
             void RunBuild(BuildingGroupSettings<T> groupSettings)
             {
-                var buildTargetGroup = BuildPipeline.GetBuildTargetGroup(buildingSettings.ToBuildTarget());
+                var buildTargetGroup = buildingSettings.ToBuildTargetGroup();
                 var cppCompilerConfiguration = buildingSettings.SelectedScriptingBackend == ScriptingBackend.IL2CPP
                     ? CalculateConfiguration(groupSettings.Settings.ScriptingBackend)
                     : (Il2CppCompilerConfiguration?)null;
