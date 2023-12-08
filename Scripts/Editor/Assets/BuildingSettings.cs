@@ -12,62 +12,54 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
     {
         #region Static Access
 
-        public static BuildingSettings Singleton => GetSingleton("building", "building.asset", "Editor/Resources", BuildingSettingsFactory.Create);
+        public static BuildingSettings Singleton => GetSingleton("building", "building.asset", "Editor/Resources",
+            BuildingSettingsFactory.Create);
 
-        public static SerializedObject SerializedSingleton => GetSerializedSingleton("building", "building.asset", "Editor/Resources", BuildingSettingsFactory.Create);
+        public static SerializedObject SerializedSingleton => GetSerializedSingleton("building", "building.asset",
+            "Editor/Resources", BuildingSettingsFactory.Create);
 
         #endregion
 
         #region Inspector Data
 
-        [SerializeField]
-        private bool clean = true;
+        [SerializeField] private bool clean = true;
 
-        [SerializeField]
-        private bool showFolder = true;
+        [SerializeField] private bool showFolder = true;
 
-        [SerializeField]
-        private bool runTests = true;
+        [SerializeField] private bool runTests = true;
 
-        [SerializeField]
-        private bool buildAssetBundles;
+        [SerializeField] private bool buildAssetBundles;
 
-        [FormerlySerializedAs("targetName")]
-        [SerializeField]
+        [FormerlySerializedAs("targetName")] [SerializeField]
         private string appName;
 
-        [SerializeField]
-        private BuildingFlags buildingFlags = BuildingFlags.None;
+        [SerializeField] private BuildingFlags buildingFlags = BuildingFlags.None;
 
-        [SerializeField]
-        private TargetPlatform selectedTargetPlatform = TargetPlatform.Windows;
+        [SerializeField] private TargetPlatform selectedTargetPlatform = TargetPlatform.Windows;
 
-        [SerializeField]
-        private TargetArchitecture selectedTargetArchitecture = TargetArchitecture.ClientX64;
+        [SerializeField] private TargetArchitecture selectedTargetArchitecture = TargetArchitecture.ClientX64;
 
-        [SerializeField]
-        private ScriptingBackend selectedScriptingBackend = ScriptingBackend.Mono;
+        [SerializeField] private ScriptingBackend selectedScriptingBackend = ScriptingBackend.Mono;
 
-        [SerializeField]
-        private int selectedGroup;
+        [SerializeField] private int selectedGroup;
 
-        [SerializeField]
-        private BuildingGroupSettings<BuildingTargetSettingsWindows>[] windows = Array.Empty<BuildingGroupSettings<BuildingTargetSettingsWindows>>();
+        [SerializeField] private BuildingGroupSettings<BuildingTargetSettingsWindows>[] windows =
+            Array.Empty<BuildingGroupSettings<BuildingTargetSettingsWindows>>();
 
-        [SerializeField]
-        private BuildingGroupSettings<BuildingTargetSettingsLinux>[] linux = Array.Empty<BuildingGroupSettings<BuildingTargetSettingsLinux>>();
+        [SerializeField] private BuildingGroupSettings<BuildingTargetSettingsLinux>[] linux =
+            Array.Empty<BuildingGroupSettings<BuildingTargetSettingsLinux>>();
 
-        [SerializeField]
-        private BuildingGroupSettings<BuildingTargetSettingsMacOS>[] macOS = Array.Empty<BuildingGroupSettings<BuildingTargetSettingsMacOS>>();
+        [SerializeField] private BuildingGroupSettings<BuildingTargetSettingsMacOS>[] macOS =
+            Array.Empty<BuildingGroupSettings<BuildingTargetSettingsMacOS>>();
 
-        [SerializeField]
-        private BuildingGroupSettings<BuildingTargetSettingsAndroid>[] android = Array.Empty<BuildingGroupSettings<BuildingTargetSettingsAndroid>>();
+        [SerializeField] private BuildingGroupSettings<BuildingTargetSettingsAndroid>[] android =
+            Array.Empty<BuildingGroupSettings<BuildingTargetSettingsAndroid>>();
 
-        [SerializeField]
-        private BuildingGroupSettings<BuildingTargetSettingsIOS>[] ios = Array.Empty<BuildingGroupSettings<BuildingTargetSettingsIOS>>();
+        [SerializeField] private BuildingGroupSettings<BuildingTargetSettingsIOS>[] ios =
+            Array.Empty<BuildingGroupSettings<BuildingTargetSettingsIOS>>();
 
-        [SerializeField]
-        private BuildingGroupSettings<BuildingTargetSettingsWebGL>[] webGL = Array.Empty<BuildingGroupSettings<BuildingTargetSettingsWebGL>>();
+        [SerializeField] private BuildingGroupSettings<BuildingTargetSettingsWebGL>[] webGL =
+            Array.Empty<BuildingGroupSettings<BuildingTargetSettingsWebGL>>();
 
         #endregion
 
@@ -187,11 +179,9 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
     {
         #region Inspector Data
 
-        [SerializeField]
-        private string name;
+        [SerializeField] private string name;
 
-        [SerializeField]
-        private string path;
+        [SerializeField] private string path;
 
         #endregion
 
@@ -217,8 +207,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
     {
         #region Inspector Data
 
-        [SerializeField]
-        private T settings;
+        [SerializeField] private T settings;
 
         #endregion
 
@@ -238,34 +227,22 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
     {
         #region Inspector Data
 
-        [Header("Commons")]
-        private bool compress;
+        [Header("Commons")] private bool compress;
 
-        [Header("IL2CPP")]
-        [SerializeField]
-        private IL2CPPBackend scriptingBackend = IL2CPPBackend.Debug;
-
-        [SerializeField]
-        private bool il2CPPIncrementBuild;
+        [Header("IL2CPP")] [SerializeField] private IL2CPPBackend scriptingBackend = IL2CPPBackend.Debug;
 
 #if UNITY_2021_2_OR_NEWER
-        [SerializeField]
-        private Il2CppCodeGeneration il2CPPCodeGeneration = Il2CppCodeGeneration.OptimizeSize;
+        [SerializeField] private Il2CppCodeGeneration il2CPPCodeGeneration = Il2CppCodeGeneration.OptimizeSize;
 #endif
 
-        [Header("Defined Symbols")]
-        [SerializeField]
+        [Header("Defined Symbols")] [SerializeField]
         private string[] additionalScriptingDefineSymbols = Array.Empty<string>();
 
-        [SerializeField]
-        private string[] additionalCompilerArguments = Array.Empty<string>();
+        [SerializeField] private string[] additionalCompilerArguments = Array.Empty<string>();
 
-        [Header("Debugging")]
-        [SerializeField]
-        private bool developmentBuild;
+        [Header("Debugging")] [SerializeField] private bool developmentBuild;
 
-        [SerializeField]
-        private bool insertDebuggingSymbols;
+        [SerializeField] private bool insertDebuggingSymbols;
 
         #endregion
 
@@ -283,12 +260,6 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
         {
             get => scriptingBackend;
             internal set => scriptingBackend = value;
-        }
-
-        public bool IL2CPPIncrementBuild
-        {
-            get => il2CPPIncrementBuild;
-            internal set => il2CPPIncrementBuild = value;
         }
 
 #if UNITY_2021_2_OR_NEWER
@@ -331,9 +302,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
     {
         #region Inspector Data
 
-        [Header("Mono")]
-        [SerializeField]
-        private ManagedStrippingLevel strippingLevel = ManagedStrippingLevel.Disabled;
+        [Header("Mono")] [SerializeField] private ManagedStrippingLevel strippingLevel = ManagedStrippingLevel.Disabled;
 
         #endregion
 
@@ -353,9 +322,7 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets
     {
         #region Inspector Data
 
-        [Header("Mono")]
-        [SerializeField]
-        private ManagedStrippingLevel strippingLevel = ManagedStrippingLevel.Disabled;
+        [Header("Mono")] [SerializeField] private ManagedStrippingLevel strippingLevel = ManagedStrippingLevel.Disabled;
 
         #endregion
 

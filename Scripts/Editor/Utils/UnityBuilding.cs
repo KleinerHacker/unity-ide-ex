@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 using UnityIdeEx.Editor.ide_ex.Scripts.Editor.Assets;
@@ -15,7 +16,8 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
         private const string TargetKey = "${TARGET}";
         private const string DefaultTargetPath = "Builds/" + TargetKey;
 
-        public static void Build<T>(BuildingGroupSettings<T> @group, bool runTest = true) where T : BuildingTargetSettings
+        public static void Build<T>(BuildingGroupSettings<T> @group, bool runTest = true)
+            where T : BuildingTargetSettings
         {
             if (runTest && BuildingSettings.Singleton.RunTests)
             {
@@ -27,7 +29,8 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
             }
         }
 
-        public static void Build<T>(BuildBehavior behavior, BuildingGroupSettings<T> data, bool runTest = true, bool switchTarget = true) where T : BuildingTargetSettings
+        public static void Build<T>(BuildBehavior behavior, BuildingGroupSettings<T> data, bool runTest = true,
+            bool switchTarget = true) where T : BuildingTargetSettings
         {
             var buildingSettings = BuildingSettings.Singleton;
             if (runTest && buildingSettings.RunTests)
@@ -40,7 +43,8 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
                 var oldBuildTarget = EditorUserBuildSettings.activeBuildTarget;
                 if (switchTarget)
                 {
-                    EditorUserBuildSettings.SwitchActiveBuildTarget(buildingSettings.ToBuildTargetGroup(), buildingSettings.ToBuildTarget());
+                    EditorUserBuildSettings.SwitchActiveBuildTarget(buildingSettings.ToBuildTargetGroup(),
+                        buildingSettings.ToBuildTarget());
                 }
 
                 try
@@ -66,8 +70,11 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
                 {
                     PlayerSettings.SetScriptingBackend(buildTargetGroup, ScriptingImplementation.IL2CPP);
                     PlayerSettings.SetIl2CppCompilerConfiguration(buildTargetGroup, cppCompilerConfiguration.Value);
-                    PlayerSettings.SetIncrementalIl2CppBuild(buildTargetGroup, groupSettings.Settings.IL2CPPIncrementBuild);
-#if UNITY_2021_2_OR_NEWER
+#if UNITY_2022_3
+                    PlayerSettings.SetIl2CppCodeGeneration(
+                        NamedBuildTarget.FromBuildTargetGroup(buildingSettings.ToBuildTargetGroup()),
+                        groupSettings.Settings.IL2CPPCodeGeneration);
+#elif UNITY_2021_2_OR_NEWER
                     EditorUserBuildSettings.il2CppCodeGeneration = groupSettings.Settings.IL2CPPCodeGeneration;
 #endif
                 }
@@ -79,25 +86,31 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
                 if (groupSettings is BuildingGroupSettings<BuildingTargetSettingsAndroid> androidSettings)
                 {
                     PlayerSettings.Android.targetArchitectures = AndroidArchitecture.All;
-                    EditorUserBuildSettings.buildAppBundle = androidSettings.Settings.TargetArchive == AndroidTargetArchive.ApplicationBundle;
+                    EditorUserBuildSettings.buildAppBundle = androidSettings.Settings.TargetArchive ==
+                                                             AndroidTargetArchive.ApplicationBundle;
                 }
 
-                var targetPath = DefaultTargetPath.Replace(TargetKey, buildingSettings.SelectedTargetPlatform.ToString()) + "/" + groupSettings.Path;
+                var targetPath =
+                    DefaultTargetPath.Replace(TargetKey, buildingSettings.SelectedTargetPlatform.ToString()) + "/" +
+                    groupSettings.Path;
                 var appName = buildingSettings.AppName + GetExtension(buildingSettings.SelectedTargetPlatform);
                 var options = new BuildPlayerOptions
                 {
                     scenes = KnownScenes,
                     target = buildingSettings.ToBuildTarget(),
                     locationPathName = targetPath + "/" + appName,
-                    options = CalculateOptions(buildingSettings.BuildingFlags, behavior, buildingSettings.Clean, buildingSettings.ShowFolder,
+                    options = CalculateOptions(buildingSettings.BuildingFlags, behavior, buildingSettings.Clean,
+                        buildingSettings.ShowFolder,
                         buildingSettings.GetSelectedTargetSettings()),
-                    extraScriptingDefines = PlayerSettings.GetScriptingDefineSymbolsForGroup(buildTargetGroup).Split(',')
+                    extraScriptingDefines = PlayerSettings.GetScriptingDefineSymbolsForGroup(buildTargetGroup)
+                        .Split(',')
                         .Concat(groupSettings.Settings.AdditionalScriptingDefineSymbols)
                         .Where(x => !string.IsNullOrWhiteSpace(x))
                         .ToArray()
                 };
 
-                if (buildingSettings.Clean && Directory.Exists(targetPath) && behavior != BuildBehavior.BuildAssetBundleOnly)
+                if (buildingSettings.Clean && Directory.Exists(targetPath) &&
+                    behavior != BuildBehavior.BuildAssetBundleOnly)
                 {
                     Debug.Log("[BUILD] Clean output folders...");
                     Directory.Delete(targetPath, true);
@@ -142,13 +155,16 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
                                 }
 
                                 var manifest = BuildPipeline.BuildAssetBundles(targetPath + "/" + item.Key,
-                                    assetPathDict.Select(x => new AssetBundleBuild { assetBundleName = x.Key, assetNames = x.Value }).ToArray(),
+                                    assetPathDict.Select(x => new AssetBundleBuild
+                                        { assetBundleName = x.Key, assetNames = x.Value }).ToArray(),
                                     BuildAssetBundleOptions.ForceRebuildAssetBundle, buildingSettings.ToBuildTarget());
 
                                 if (manifest == null)
                                 {
                                     Debug.LogError("[BUILD] Asset Bundle build failed");
-                                    EditorUtility.DisplayDialog("Asset Bundle Build", "Asset Bundle Build failed for " + string.Join(',', item.Value.Select(x => x.AssetBundleName)), "OK");
+                                    EditorUtility.DisplayDialog("Asset Bundle Build",
+                                        "Asset Bundle Build failed for " + string.Join(',',
+                                            item.Value.Select(x => x.AssetBundleName)), "OK");
                                     return;
                                 }
                             }
@@ -175,7 +191,8 @@ namespace UnityIdeEx.Editor.ide_ex.Scripts.Editor.Utils
 
         private static string[] KnownScenes => EditorBuildSettings.scenes.Select(x => x.path).ToArray();
 
-        private static BuildOptions CalculateOptions(BuildingFlags buildFlag, BuildBehavior behavior, bool clean, bool showFolder, BuildingTargetSettings settings)
+        private static BuildOptions CalculateOptions(BuildingFlags buildFlag, BuildBehavior behavior, bool clean,
+            bool showFolder, BuildingTargetSettings settings)
         {
             var options = BuildOptions.None;
             if (settings.Compress)
